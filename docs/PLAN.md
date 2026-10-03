@@ -114,7 +114,4 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 1. ~~Public or private on GitHub?~~ **Public** (owner, 2026-10-03): github.com/AfterDuskAu/ParticleAccelerator.
 2. **Names in menus:** "3 · Particle Wave" (number and name, as built) or numbers only?
 3. **The flashing limit, on by default?** Suggested: yes.
-4. **Two more of Apple's frameworks?** `CLAUDE.md` rule 2 names seven and says to ask before adding any other.
-   - **AudioToolbox** is in use since phase 1: it's the part of Core Audio that holds the audio-unit functions, which is how the sound is copied for the analyser.
-   - **MediaToolbox** is needed in phase 1's second session: the listening tap on a host app's `AVPlayer` is made with it, and there's no other way.
-   - Suggested: add both to the rule.
+4. ~~Two more of Apple's frameworks?~~ **Yes** (owner, 2026-10-03): AudioToolbox and MediaToolbox are in `CLAUDE.md` rule 2, and another of Apple's frameworks may be added when the work needs it.

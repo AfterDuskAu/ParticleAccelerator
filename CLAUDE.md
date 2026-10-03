@@ -12,7 +12,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 
 1. **The library comes first, and the app is a thin shell over it.** Everything lives in the `ParticleAccelerator` library: hearing the music, the stage, the visuals, the settings. Anything the app can do, a host app can do through the library's public API. The app adds only windows, menus and file pickers.
 2. **It stands alone.**
-   - It uses Apple's own frameworks only: AVFoundation, Accelerate, Metal, MetalKit, Core Audio, SwiftUI and AppKit. Ask before adding anything else.
+   - It uses Apple's own frameworks only: AVFoundation, Accelerate, Metal, MetalKit, Core Audio (which includes AudioToolbox), MediaToolbox, SwiftUI and AppKit. Another of Apple's frameworks may be added when the work needs it, with a line in `docs/CHANGELOG.md` (owner, 2026-10-03). Ask before adding anything that isn't Apple's.
    - It never imports, links or knows about Music Organizer.
 3. **The public API is a promise.** Anything `public` is something Music Organizer may use. Changing or removing it means a version bump, a note in `docs/INTEGRATION.md` and an entry in `docs/CHANGELOG.md`. Keep the public surface small; everything else is `internal`.
 4. **It listens and never changes the sound.**
@@ -56,14 +56,15 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 ## Testing
 
 - `swift build` and `swift test` must pass before a step is declared done. Run them, don't assume.
-- Sound for tests is generated while the test runs: sine waves at known pitches, click tracks at known tempos, silence, noise. No audio files are committed.
+- Sound for tests is generated while the test runs: sine waves at known pitches, click tracks at known tempos, silence, noise, and a made-up song whose every fact is known (`TestSong`: 124 beats a minute, 82 kicks). No audio files are committed.
 - Tests that need the graphics card skip, saying why, when the computer has none (some CI machines). They must run and pass on the iMac.
 - Tests never use the network, and never use the owner's music or the real microphone or system sound.
 
 ## Working with the owner
 
 - Commit when a step's work is done and checked; there's no need to ask first. The owner usually pushes.
-- Playing a song makes sound on the owner's Mac, so stop it straight after a check.
+- Play songs muted when checking in the app (`--muted`; the owner asked on 2026-10-03), and stop them straight after. `scripts/make_test_song.sh` writes the made-up test song to `build/` for this.
+- Real songs may be used for checks that aren't committed: the owner's sample song is "Do I Wanna Know?" by Arctic Monkeys (85 BPM), and the web can be searched for a song's published tempo to compare.
 - Don't take over the screen (full screen, moving windows) while the owner is using the Mac. Say first what's about to be shown and for how long.
 - New visuals follow the routine in `docs/PLAN.md`: a card first, the owner's OK, then build.
 

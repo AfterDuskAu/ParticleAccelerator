@@ -23,7 +23,7 @@
 - **The signal chain:** source, range, curve, fade, for single levels (`LiveSignal`) and for the whole spectrum (`LiveSpectrum`). It can be saved and read back.
 - **The sound check** (`SoundCheckView`): plain bars, band meters, a beat light and the tempo, with the song's controls. It stops drawing when its window can't be seen.
 - **The app:** a song arrives by File → Open, by a drop on the window, or by "Open With" or the Dock icon. Space plays and pauses, and ⇧⌘M mutes. `--muted` starts it muted.
-- **Tests:** 53, on sound generated as they run. One plays a generated file through the real audio engine, muted, and checks that what the analyser hears matches the file sample for sample.
+- **Tests:** 53 at first, on sound generated as they run. One plays a generated file through the real audio engine, muted, and checks that what the analyser hears matches the file sample for sample.
 
 **Measured on the iMac (2026-10-03):**
 
@@ -56,4 +56,10 @@
 - **A song with no kick drum** gives no beat pulses. The tempo and the steady count can still work.
 - **A file with more than two channels** is heard through its first two.
 
-**Frameworks:** this uses AudioToolbox, the part of Core Audio where the audio-unit functions live, and Swift's own Observation. Neither is named in `CLAUDE.md` rule 2 (see `PLAN.md`, decisions waiting).
+**Frameworks:** this uses AudioToolbox, the part of Core Audio where the audio-unit functions live, and Swift's own Observation. The owner agreed the same day: AudioToolbox and MediaToolbox (for session 2) are now named in `CLAUDE.md` rule 2, and another of Apple's frameworks may be added when the work needs it.
+
+**The made-up test song** (added the same day, at the owner's suggestion). `TestSong` builds 40 seconds of a dance beat from numbers, so every fact about it is known: 124 beats a minute, 82 kicks and the moment each lands, the bass notes, the loudest sample.
+
+- Six tests listen to it and check the listener against those facts. That makes 59 tests.
+- `scripts/make_test_song.sh` writes the same song to `build/Test Song 124.wav` for trying in the app.
+- Checked in the app, muted: it reads 124 BPM.

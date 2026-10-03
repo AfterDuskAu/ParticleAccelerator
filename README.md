@@ -45,6 +45,12 @@ Run the tests:
 swift test
 ```
 
+Make a test song whose tempo is known exactly (124 beats a minute), for trying in the app:
+
+```bash
+scripts/make_test_song.sh
+```
+
 ## In another app
 
 Particle Accelerator is a Swift package. Another Mac app adds it with one line in `Package.swift` and shows it with one view. See [`docs/INTEGRATION.md`](docs/INTEGRATION.md). Music Organizer is the first.
