@@ -45,7 +45,7 @@ That's all. Optional extras for a host that wants its own menus:
 
 - Its Local Visualizer page gets **Visualizer** beside Cover and Video. The player there is the app's single `AVPlayer` (`Player.screen`), and the artwork is the playing song's cover.
 - That fits Music Organizer's rules: the app never writes inside the library, and the visualizer writes nothing at all.
-- Music Organizer's repo is public, and its CI must be able to fetch this package, so **this repo needs to be public too** (or Music Organizer copies the package in).
+- Music Organizer's repo is public, and its CI must be able to fetch this package, so this repo is public too (since 2026-10-03).
 
 ## Changes to the public API
 

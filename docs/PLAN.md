@@ -111,6 +111,6 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 
 ## Decisions waiting for the owner
 
-1. **Public or private on GitHub?** Music Organizer is public and will need to fetch this package, so public is suggested. Nothing has been put on GitHub yet.
+1. ~~Public or private on GitHub?~~ **Public** (owner, 2026-10-03): github.com/AfterDuskAu/ParticleAccelerator.
 2. **Names in menus:** "3 · Particle Wave" (number and name, as built) or numbers only?
 3. **The flashing limit, on by default?** Suggested: yes.
