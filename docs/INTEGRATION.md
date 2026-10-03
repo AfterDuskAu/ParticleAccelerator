@@ -49,4 +49,8 @@ That's all. Optional extras for a host that wants its own menus:
 
 ## Changes to the public API
 
-None yet. The API is still a plan.
+The API is still a plan until version 1.0.0, and these may change before then.
+
+- **0.1.0, 2026-10-03, added:**
+  - `MusicListener`: plays a song file and listens to it (`play(songFile:)`, `pause()`, `resume()`, `seek(to:)`, `stop()`, `isMuted`, `songTitle`, `isPlaying`, `duration`, `currentTime`). Listening to a host's `AVPlayer`, as in step 2 above, comes in phase 1's second session.
+  - `SoundCheckView(listener:)`: plain bars, meters and a beat light showing what the listener hears.

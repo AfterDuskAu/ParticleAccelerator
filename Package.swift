@@ -6,6 +6,8 @@
 // (docs/INTEGRATION.md). `ParticleAcceleratorApp` is the stand-alone Mac app, a thin
 // shell over the library; scripts/build_app.sh makes "Particle Accelerator.app".
 // `pa-bench` measures what a Mac's graphics card can draw (docs/OUTPUT.md).
+// `AtomicIntegers` is a few lines of C the library uses to share sound between threads
+// without locks (Swift's own atomics need macOS 15).
 import PackageDescription
 
 let settings: [SwiftSetting] = [.swiftLanguageMode(.v5)]
@@ -19,7 +21,10 @@ let package = Package(
         .executable(name: "pa-bench", targets: ["PABench"]),
     ],
     targets: [
-        .target(name: "ParticleAccelerator", swiftSettings: settings),
+        .target(name: "AtomicIntegers"),
+        .target(
+            name: "ParticleAccelerator", dependencies: ["AtomicIntegers"],
+            swiftSettings: settings),
         .executableTarget(
             name: "ParticleAcceleratorApp", dependencies: ["ParticleAccelerator"],
             swiftSettings: settings),

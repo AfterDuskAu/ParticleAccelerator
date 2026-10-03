@@ -35,6 +35,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `Stage/`: the Metal renderer, particles, the camera, glow, quality tiers and Auto
   - `Visuals/`: one file per visual
   - `Settings/`: `Codable` settings and presets
+- `Sources/AtomicIntegers/`: a few lines of C, so the audio thread and the analyser can share a count without a lock (Swift's own atomics need macOS 15).
 - `Sources/ParticleAcceleratorApp/`: the stand-alone app. `scripts/build_app.sh` builds `build/Particle Accelerator.app`.
 - `Sources/PABench/`: `pa-bench`, which measures a Mac's graphics card and suggests a tier (`swift run -c release pa-bench`).
 - `Tests/ParticleAcceleratorTests/`: Swift Testing.

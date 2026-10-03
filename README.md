@@ -2,7 +2,7 @@
 
 Visuals that move with the music, for the Mac. Particles, light, ink and 3D shapes are driven live by the real sound of a song file, whatever the Mac is playing, or a microphone. It works on an older Intel iMac and scales up to a Mac Studio on a 4K or 6K screen.
 
-**Status:** just started (version 0.1.0). The app opens a window listing the visuals on their way, and nothing plays yet. See [`docs/PLAN.md`](docs/PLAN.md).
+**Status:** early (version 0.1.0). The app plays a song file and shows what it hears: the spectrum, six bands, the loudness, each beat and the tempo. No visual is built yet. See [`docs/PLAN.md`](docs/PLAN.md).
 
 ## The visuals
 
@@ -23,6 +23,14 @@ Needs macOS 14 or later and Xcode's command-line tools.
 
 ```bash
 scripts/build_app.sh --open
+```
+
+Drop a song file on the window, or choose File → Open… Space plays and pauses, and ⇧⌘M mutes the speakers while the bars keep moving.
+
+To start it muted (for checking the picture without any sound):
+
+```bash
+open "build/Particle Accelerator.app" --args --muted
 ```
 
 Measure what this Mac's graphics card can draw, and see the quality it suggests:

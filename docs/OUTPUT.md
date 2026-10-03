@@ -44,3 +44,16 @@ Particle Accelerator should look its best on whatever Mac it's on. An older Mac 
 Suggested: **High at 60 fps**, Medium at 120 fps. The particle count matters far more than the drawing size; the background shader is the reverse.
 
 To add: a Mac Studio, an Apple Silicon laptop. Run `pa-bench` on it and add its table here.
+
+### Hearing the music
+
+**2019 iMac, 2026-10-03:**
+
+| What | Cost |
+|---|---|
+| Measuring the sound (FFT, bars, bands, beats), for each 60 fps frame | 0.012 ms on average, 0.08 ms at worst |
+| The same, for a minute of music | 43 ms of processor time |
+| The sound check window while it draws (SwiftUI, 60 fps, playing a song) | 15–21% of one processor core |
+| The same window minimised, song still playing | 0.3% |
+
+Measuring the sound costs almost nothing beside a frame's 16.7 ms. The sound check's cost is its SwiftUI drawing, which the visuals won't use: they draw with Metal.

@@ -8,3 +8,52 @@
 - **The plan:** `docs/PLAN.md` (roadmap, the picture routine, why Metal and not Unreal), `docs/VISUALS.md` (six cards), `docs/OUTPUT.md` (quality tiers, output options, measurements), `docs/INTEGRATION.md` (how Music Organizer will add it).
 - **Measured on the iMac:** 300,000 particles at 2560×1440 in 4.8 ms per frame, so High quality at 60 fps.
 - **Safety:** the secret check, hooks and CI are copied from Music Organizer. The check also refuses anything under `references/`, where the pictures the visuals are modelled on are kept on the owner's Mac.
+
+### Phase 1, session 1: hearing a song file
+
+2026-10-03. The app now plays a song file and shows what it hears. Session 2 adds the other three sources (the Mac's own sound, a microphone, a host app's player).
+
+- **The listener** (`MusicListener`): plays a song file, with play, pause, seek and mute. Mute silences the speakers while the visuals still hear the song.
+- **The analyser:** about 86 times a second it measures the last 2,048 samples and gives:
+  - the 64 spectrum bars
+  - the six bands
+  - the loudness
+  - auto-gain: each of these is measured against its own last ten seconds
+- **Beats:** each kick as it lands, the tempo, and a steady count of beats that stays in step with the kicks and carries on when the drums drop out.
+- **The signal chain:** source, range, curve, fade, for single levels (`LiveSignal`) and for the whole spectrum (`LiveSpectrum`). It can be saved and read back.
+- **The sound check** (`SoundCheckView`): plain bars, band meters, a beat light and the tempo, with the song's controls. It stops drawing when its window can't be seen.
+- **The app:** a song arrives by File → Open, by a drop on the window, or by "Open With" or the Dock icon. Space plays and pauses, and ⇧⌘M mutes. `--muted` starts it muted.
+- **Tests:** 53, on sound generated as they run. One plays a generated file through the real audio engine, muted, and checks that what the analyser hears matches the file sample for sample.
+
+**Measured on the iMac (2026-10-03):**
+
+- AVAudioEngine's own tap delivers sound only every tenth of a second, however small a buffer is asked for. That's too jerky to draw from.
+- A Core Audio render notify delivers every 512 samples (11.6 ms), on the audio thread.
+- The analyser takes 0.012 ms a frame at 60 fps (worst 0.08 ms).
+- The sound check window uses 15–21% of one processor core while it draws, and 0.3% when minimised.
+- **Tempo on real songs:** on the owner's sample song, "Do I Wanna Know?" by Arctic Monkeys (85 BPM), it reads 84–86 for 99% of the song. Of ten songs tried:
+  - four have a published tempo, and all four match
+  - three more hold one steady tempo
+  - three wander between related tempos (see the limits below)
+
+**Changes from the plan, and why:**
+
+- **Where the sound is copied.** The plan didn't say. A render notify sits on a switched-off equaliser between the player and the mixer. That point is before the volume, so mute works, and it's at the file's own sample rate.
+- **A small C target, `AtomicIntegers`.** The lock-free ring needs atomic numbers. Swift's own need macOS 15, and this project supports macOS 14. It's a few lines of the C standard library, not an outside package.
+- **The analyser works in fixed steps of 512 samples, not once a frame.** Each frame works through the steps that have arrived. The beat tracker needs evenly spaced measurements, and this way a song gives the same readings at any frame rate.
+- **Auto-gain's ranges.** A band or the loudness reads 0 at 20 decibels below its recent peak, and a bar at 40. A first try at 30 and 48 left the loudness pinned at full on a real song and the bars a solid block. A band is never turned up by more than 30 decibels against the whole sound, so an empty band doesn't show its hiss.
+- **The spectrum isn't one of `SoundSource`'s cases.** A control driven by the spectrum gets 64 values, not one, so it has its own type (`LiveSpectrum`) with the same range, curve and fade.
+- **Beats, tuned on real music.** Three things were added after the first try:
+  - A beat must be at least half as strong as the strongest of the last few seconds. Bass notes between the kicks were being counted.
+  - The tempo is measured from all 64 bars equally. The first try let the snare drown out the kick, and found half the tempo.
+  - A settled tempo is kept through passages with no clear rhythm. It's replaced only by one heard clearly, and forgotten after ten seconds of silence. Without that, it jumped to double in the sample song's choruses.
+- **Mute** wasn't in the plan. The owner asked for it, so checks can be run without sound.
+- **Delaying the signals by the output's latency** moves to session 2, with the sources that need it most.
+
+**Known limits:**
+
+- **Half and double tempo.** A rhythm that repeats every beat also repeats every two, so 75 and 150 both fit. It picks the one nearer 125, between 60 and 180. Three of the ten songs wandered between related tempos (75 ↔ 150, 75 ↔ 112). Knowing a song ahead (phase 12) is the real fix.
+- **A song with no kick drum** gives no beat pulses. The tempo and the steady count can still work.
+- **A file with more than two channels** is heard through its first two.
+
+**Frameworks:** this uses AudioToolbox, the part of Core Audio where the audio-unit functions live, and Swift's own Observation. Neither is named in `CLAUDE.md` rule 2 (see `PLAN.md`, decisions waiting).
