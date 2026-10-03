@@ -1,32 +1,18 @@
 import AVFoundation
-import CoreAudio
 import Testing
 
 @testable import ParticleAccelerator
 
-/// A folder of the test's own in the Mac's temporary place, removed afterwards.
+/// Runs a test with a folder of its own, removed afterwards.
 private func withTemporaryFolder(_ body: (URL) throws -> Void) throws {
-    let folder = FileManager.default.temporaryDirectory
-        .appendingPathComponent("ParticleAcceleratorTests-\(UUID().uuidString)")
-    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-    defer { try? FileManager.default.removeItem(at: folder) }
-    try body(folder)
+    let folder = try TemporaryFolder()
+    try body(folder.url)
 }
 
-/// Writes a short tone as a sound file. It's only ever opened, never played, so the
-/// tests make no sound.
+/// Writes a short tone as a sound file.
 private func writeTone(to url: URL, seconds: Double) throws {
-    let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
-    let frames = AVAudioFrameCount(seconds * 44_100)
-    let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames))
-    buffer.frameLength = frames
-    let tone = TestSound.sine(hz: 440, amplitude: 0.5, seconds: seconds)
-    let channels = try #require(buffer.floatChannelData)
-    for channel in 0..<2 {
-        for frame in 0..<Int(frames) { channels[channel][frame] = tone[frame] }
-    }
-    let file = try AVAudioFile(forWriting: url, settings: format.settings)
-    try file.write(from: buffer)
+    let sound = TestSound.sine(hz: 440, amplitude: 0.5, seconds: seconds)
+    try writeSoundFile(left: sound, right: sound, sampleRate: TestSound.sampleRate, to: url)
 }
 
 @MainActor @Test func aSongFileOpensWithItsNameAndLength() throws {
@@ -107,62 +93,11 @@ private func writeTone(to url: URL, seconds: Double) throws {
     }
 }
 
-/// Some CI machines have no sound output at all. This asks Core Audio which device
-/// sound goes to, without starting anything.
-private let macHasSoundOutput: Bool = {
-    var device = AudioDeviceID(kAudioObjectUnknown)
-    var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-    var address = AudioObjectPropertyAddress(
-        mSelector: kAudioHardwarePropertyDefaultOutputDevice,
-        mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
-    let status = AudioObjectGetPropertyData(
-        AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device)
-    return status == noErr && device != kAudioObjectUnknown
-}()
-
-/// Collects everything a ring hears, on a thread of its own, the way an analyser would.
-private final class RingRecorder: @unchecked Sendable {
-    private let ring: SampleRing
-    private let queue = DispatchQueue(label: "ring recorder")
-    private let timer: DispatchSourceTimer
-    private var heard: [Float] = []
-    private var collectedUpTo: Int64 = 0
-    private var missedSome = false
-
-    init(ring: SampleRing) {
-        self.ring = ring
-        timer = DispatchSource.makeTimerSource(queue: queue)
-        timer.schedule(deadline: .now(), repeating: .milliseconds(5))
-        timer.setEventHandler { [weak self] in self?.collect() }
-        timer.resume()
-    }
-
-    private func collect() {
-        let written = ring.totalWritten
-        let count = Int(written - collectedUpTo)
-        guard count > 0 else { return }
-        var chunk = [Float](repeating: 0, count: count)
-        let fine = chunk.withUnsafeMutableBufferPointer {
-            ring.read(endingAt: written, count: count, into: $0.baseAddress!)
-        }
-        if fine { heard += chunk } else { missedSome = true }
-        collectedUpTo = written
-    }
-
-    /// Stops collecting. Returns nil if the ring was written over before it was read.
-    func finish() -> [Float]? {
-        queue.sync {
-            timer.cancel()
-            collect()
-            return missedSome ? nil : heard
-        }
-    }
-}
-
 /// The one test that really plays a file. It plays it muted, so it makes no sound.
 @MainActor
 @Test(.enabled(if: macHasSoundOutput, "This computer has no sound output to play through."))
 func whatTheAnalyserHearsIsExactlyTheFileEvenWhenMuted() async throws {
+    await waitForAQuietMoment()
     let folder = FileManager.default.temporaryDirectory
         .appendingPathComponent("ParticleAcceleratorTests-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -197,9 +132,7 @@ func whatTheAnalyserHearsIsExactlyTheFileEvenWhenMuted() async throws {
     playback.isMuted = true
     try playback.play()
     #expect(playback.isPlaying)
-    for _ in 0..<500 where !stoppedByItself {
-        try await Task.sleep(for: .milliseconds(20))
-    }
+    await wait(upTo: 30) { stoppedByItself }
     #expect(stoppedByItself)
     #expect(playback.isPlaying == false)
     #expect(playback.currentTime == 0)
@@ -207,7 +140,7 @@ func whatTheAnalyserHearsIsExactlyTheFileEvenWhenMuted() async throws {
     // Silence keeps arriving for a moment after the song ends, so the visuals settle
     // instead of freezing on the last note.
     let writtenAtTheEnd = playback.ring.totalWritten
-    try await Task.sleep(for: .milliseconds(400))
+    await pause(seconds: 0.4)
     #expect(playback.ring.totalWritten - writtenAtTheEnd > Int64(rate * 0.1))
     playback.shutDown()
 

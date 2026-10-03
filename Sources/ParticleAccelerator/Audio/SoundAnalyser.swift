@@ -143,11 +143,15 @@ final class SoundAnalyser {
 
     /// Measures any sound that has arrived since the last call, and returns the newest
     /// reading.
-    func update() -> SoundReading {
-        let written = ring.totalWritten
+    ///
+    /// - Parameter limit: the number of the last sample to measure, for a source that
+    ///   hands sound over before it's heard. Left out, everything in the ring is
+    ///   measured.
+    func update(upTo limit: Int64 = .max) -> SoundReading {
+        let written = min(limit, ring.totalWritten)
         // A long way behind (the window was hidden, say): skip to the newest sound
         // rather than work through sound nobody saw.
-        if written - measuredUpTo > Int64(SampleRing.capacity / 2) {
+        if written - measuredUpTo > Self.furthestBehind(ring.sampleRate) {
             measuredUpTo = written - Int64(stepSize)
         }
         while measuredUpTo + Int64(stepSize) <= written {
@@ -157,6 +161,11 @@ final class SoundAnalyser {
             }
         }
         return reading
+    }
+
+    /// Two seconds of sound: further behind than this, it skips ahead.
+    private static func furthestBehind(_ sampleRate: Double) -> Int64 {
+        min(Int64(2 * sampleRate), Int64(SampleRing.capacity / 2))
     }
 
     // MARK: Each step
@@ -262,7 +271,9 @@ final class SoundAnalyser {
             barSqueezedBefore[index] = squeezed
         }
 
-        beats.add(kickFlux: kickJump, onsetStrength: wholeJump, isSilent: isSilent)
+        beats.add(
+            kickFlux: kickJump, onsetStrength: wholeJump, isSilent: isSilent,
+            isTooFaint: loudnessPeak <= Self.quietestPeak)
         reading.beat = beats.beat
         reading.beatsHeard = beats.beatsHeard
         reading.beatsPerMinute = beats.beatsPerMinute

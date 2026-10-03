@@ -37,6 +37,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSApplicationCategoryType</key><string>public.app-category.music</string>
     <key>NSHighResolutionCapable</key><true/>
+    <!-- What macOS shows the person when it asks whether the app may listen. -->
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>Particle Accelerator listens to the sound this Mac is playing so its visuals can move with the music. Nothing is recorded or saved.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Particle Accelerator listens to the microphone so its visuals can move with the music in the room. Nothing is recorded or saved.</string>
     <!-- Lets a song be dropped on the Dock icon or opened with "Open With". "Alternate"
          means it never becomes the app that sound files open in by default. -->
     <key>CFBundleDocumentTypes</key>

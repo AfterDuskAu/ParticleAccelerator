@@ -103,4 +103,16 @@ struct SoundReading: Equatable {
 
     /// A reading of silence.
     static let silence = SoundReading()
+
+    /// The same reading with the sound gone quiet: the tempo and the beat counts are
+    /// kept, so a visual settles down but doesn't lose its place.
+    var quieted: SoundReading {
+        var quiet = SoundReading.silence
+        quiet.beatsHeard = beatsHeard
+        quiet.beatsPerMinute = beatsPerMinute
+        quiet.beatPhase = beatPhase
+        quiet.steadyBeats = steadyBeats
+        quiet.seconds = seconds
+        return quiet
+    }
 }

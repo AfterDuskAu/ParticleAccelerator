@@ -101,9 +101,14 @@ final class BeatTracker {
     /// - Parameters:
     ///   - kickFlux: how much the kick band just jumped.
     ///   - onsetStrength: how much the whole sound just jumped.
-    ///   - isSilent: whether there's no sound at all right now.
-    func add(kickFlux: Float, onsetStrength: Float, isSilent: Bool) {
-        let heardBeat = hearKick(kickFlux)
+    ///   - isSilent: whether there's no sound at all right now (as there is between
+    ///     the hits of a sparse drum part).
+    ///   - isTooFaint: whether nothing in the last ten seconds has been loud enough to
+    ///     count as music (a quiet room through a microphone).
+    func add(kickFlux: Float, onsetStrength: Float, isSilent: Bool, isTooFaint: Bool) {
+        // Sound that faint has no beats and no tempo, however rhythmic its hiss
+        // happens to be.
+        let heardBeat = hearKick(kickFlux, canBeABeat: !isTooFaint)
 
         silentSteps = isSilent ? silentSteps + 1 : 0
         if silentSteps >= forgetAfterSilentSteps {
@@ -117,7 +122,7 @@ final class BeatTracker {
         stepsSinceTempoCheck += 1
         if stepsSinceTempoCheck >= stepsBetweenTempoChecks, onsetsKept >= fewestOnsetsForTempo {
             stepsSinceTempoCheck = 0
-            settleTempo(measureTempo())
+            if !isTooFaint { settleTempo(measureTempo()) }
         }
 
         countSteadily(heardBeat: heardBeat)
@@ -128,7 +133,7 @@ final class BeatTracker {
     /// A beat is a jump in the kick band that stands well above how much the band has
     /// been moving for the last half second, and isn't small beside the strongest jumps
     /// of the last few seconds.
-    private func hearKick(_ kickFlux: Float) -> Bool {
+    private func hearKick(_ kickFlux: Float, canBeABeat: Bool) -> Bool {
         var mean: Float = 0
         var meanOfSquares: Float = 0
         vDSP_meanv(recentKickFlux, 1, &mean, vDSP_Length(recentKickFlux.count))
@@ -142,7 +147,7 @@ final class BeatTracker {
         recentKickIndex = (recentKickIndex + 1) % recentKickFlux.count
 
         stepsSinceBeat += 1
-        let heardBeat = kickFlux > threshold && stepsSinceBeat >= shortestGapSteps
+        let heardBeat = canBeABeat && kickFlux > threshold && stepsSinceBeat >= shortestGapSteps
         if heardBeat {
             stepsSinceBeat = 0
             beatsHeard += 1

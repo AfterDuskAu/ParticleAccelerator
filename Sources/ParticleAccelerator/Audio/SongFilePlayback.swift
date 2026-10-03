@@ -20,12 +20,17 @@ struct ListeningProblem: LocalizedError, Equatable {
 /// from.
 ///
 /// Use it from the main thread only.
-final class SongFilePlayback {
+final class SongFilePlayback: SoundFeed {
     let title: String
     let duration: TimeInterval
     private(set) var isPlaying = false
     /// The sound being played, for the analyser.
     let ring: SampleRing
+    /// The sound is copied as it's handed to the speakers, a moment before it comes
+    /// out of them.
+    var heardUpTo: Int64 { ring.totalWritten - delaySamples }
+    /// When the song is paused, silence flows through by itself.
+    var isHeldStill: Bool { false }
     /// Whether the speakers are silenced. The analyser hears the song either way.
     var isMuted = false {
         didSet { applyMute() }
@@ -44,6 +49,8 @@ final class SongFilePlayback {
     private let passThrough = AVAudioUnitEQ(numberOfBands: 1)
     private var isConnected = false
     private var isCopying = false
+    /// How long the Mac's output takes to play a sample, in the song's own samples.
+    private var delaySamples: Int64 = 0
     /// Where in the file the part now scheduled on the player begins.
     private var startFrame: AVAudioFramePosition = 0
     private var isScheduled = false
@@ -108,6 +115,7 @@ final class SongFilePlayback {
         if !isScheduled {
             scheduleFile(from: startFrame)
         }
+        delaySamples = Int64(SoundDevices.outputDelaySeconds() * fileRate)
         player.play()
         playBeganAt = ProcessInfo.processInfo.systemUptime
         isPlaying = true

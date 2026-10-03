@@ -1,7 +1,7 @@
 import AtomicIntegers
 import CoreAudio
 
-/// The last second or so of sound, handed from the audio thread to the analyser.
+/// The last few seconds of sound, handed from the audio thread to the analyser.
 ///
 /// The audio thread writes and never waits: no lock, no memory allocation, and when the
 /// ring is full it writes over the oldest sound. The analyser reads whichever stretch it
@@ -11,8 +11,10 @@ import CoreAudio
 /// The sound is kept as one channel (left and right averaged), which is all the
 /// analyser needs.
 final class SampleRing: @unchecked Sendable {
-    /// How many samples the ring holds: about 1.5 seconds at 44,100 a second.
-    static let capacity = 65_536
+    /// How many samples the ring holds: about 6 seconds at 44,100 a second. It has to
+    /// hold more than the analyser looks at, because some sources hand sound over well
+    /// before it's heard (a player's tap runs half a second ahead of the speakers).
+    static let capacity = 262_144
 
     /// The newest part of the ring a writer may be in the middle of changing, so a
     /// reader never trusts the oldest quarter. One write is never longer than this.

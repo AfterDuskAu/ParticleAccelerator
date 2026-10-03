@@ -59,6 +59,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 - Sound for tests is generated while the test runs: sine waves at known pitches, click tracks at known tempos, silence, noise, and a made-up song whose every fact is known (`TestSong`: 124 beats a minute, 82 kicks). No audio files are committed.
 - Tests that need the graphics card skip, saying why, when the computer has none (some CI machines). They must run and pass on the iMac.
 - Tests never use the network, and never use the owner's music or the real microphone or system sound.
+- A test that plays sound in real time (a player, the audio engine) plays it silently, calls `waitForAQuietMoment()` first and waits with `pause(seconds:)`, never `Task.sleep`: while the heavy tests run, timers stall for seconds (`docs/CHANGELOG.md`, phase 1 session 2).
 
 ## Working with the owner
 

@@ -57,3 +57,17 @@ To add: a Mac Studio, an Apple Silicon laptop. Run `pa-bench` on it and add its 
 | The same window minimised, song still playing | 0.3% |
 
 Measuring the sound costs almost nothing beside a frame's 16.7 ms. The sound check's cost is its SwiftUI drawing, which the visuals won't use: they draw with Metal.
+
+### Keeping the picture in time with the sound
+
+**2019 iMac, 2026-10-03:**
+
+| What | Measured |
+|---|---|
+| How far ahead of the speakers a player's tap hears the sound | 0.46 s, steady |
+| The size of the blocks a player's tap is handed | 2,260 samples (47 ms) |
+| The output delay Core Audio reports for the owner's Bluetooth headphones | 195 ms |
+| The output delay for the iMac's own speakers | to be read (they weren't in use) |
+| How long a song stops when a tap is added to a player already playing | about 0.5 s |
+
+The listener allows for all of these by itself. The timing control (± up to half a second) is for what Core Audio can't know, such as a TV that's slow to show the picture.

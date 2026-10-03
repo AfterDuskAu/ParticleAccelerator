@@ -1,6 +1,6 @@
 # Plan
 
-**Status, 2026-10-03:** phase 1 is half done. The app plays a song file and shows what it hears: spectrum bars, six bands, loudness, a beat light and the tempo. No visual is built yet. Next is phase 1's second session: hearing the Mac's own sound, a microphone and a host app's player.
+**Status, 2026-10-03:** phase 1 is done. The listener hears a song file, whatever the Mac is playing, a microphone, or a host app's player, and the app shows what it hears: spectrum bars, six bands, loudness, a beat light and the tempo. No visual is built yet. Next is phase 2: the stage, and Visual 3 (Particle Wave).
 
 ## What it is
 
@@ -26,9 +26,9 @@ The owner asked whether to build it in Unreal Engine, the game engine Vizibeat r
 All four feed the same analyser, so every visual works with every source.
 
 1. **A song file**, dropped on the window or opened from the menu. Played by the app itself.
-2. **Whatever the Mac is playing** (Spotify, a browser, Music Organizer). This uses Core Audio's process taps, in macOS 14.2 and later. macOS asks once for permission ("Screen & System Audio Recording"). How that permission behaves with an ad-hoc-signed app is checked in phase 1.
-3. **A microphone or line input**, for a room, a turntable, a band.
-4. **A host app's `AVPlayer`** (Music Organizer): a listening tap on the item it plays. It should work on files and progressive streams such as YouTube's, but not on HLS streams. Proven in phase 1 with a test player playing a YouTube-style joined composition.
+2. **Whatever the Mac is playing** (Spotify, a browser, Music Organizer). This uses Core Audio's process taps, in macOS 14.2 and later. macOS asks once for permission ("Screen & System Audio Recording"). Checked in phase 1 with this ad-hoc-signed app: the permission survives a rebuild.
+3. **A microphone or line input**, for a room, a turntable, a band. A Bluetooth headset is passed over for the Mac's own microphone, because listening to one drops it to call quality.
+4. **A host app's `AVPlayer`** (Music Organizer): a listening tap on the item it plays. It works on files and joined compositions such as the one used for YouTube (proven in phase 1 with a test player), but not on HLS streams.
 
 ## How the music drives a visual
 
@@ -55,7 +55,10 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
   - RMS loudness
 - **Beats:** spectral flux in the kick band, against a moving threshold and against the strongest kicks of the last few seconds. The tempo comes from the onsets' autocorrelation, which gives a beat phase, so visuals can step in time and anticipate the next beat.
 - **Auto-gain:** each band is measured against its own last 10 seconds or so, so a quiet verse and a big drop look different, and quiet and loud songs both move. A band reads 0 at 20 decibels below its recent peak, and a bar at 40.
-- **Timing:** a tap hears the sound slightly before the speakers play it, so the signals are delayed by the output device's latency (from Core Audio). A ± setting covers the rest.
+- **Timing:** a tap hears the sound before the speakers play it, so the analyser only measures what has been heard.
+  - A song file and the Mac's sound wait for the output's delay, from Core Audio (195 ms on the owner's Bluetooth headphones).
+  - A player's tap runs 0.46 seconds ahead, so it's read by the player's own clock.
+  - A ± setting covers the rest.
 
 ## The stage (what draws everything)
 
@@ -76,7 +79,7 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 | Phase | What | What the owner sees | Size (sessions) |
 |---|---|---|---|
 | 0 | **Set up** (done 2026-10-03): the repo, rules, plan, secret checks, CI, a first app window, `pa-bench` | A window listing the visuals | done |
-| 1 | **Hearing the music:** the four sources, the analyser, beats, the signal chain. Tests on generated tones and click tracks. Plain test bars and a beat light in the app. **Session 1 done 2026-10-03:** a song file, the analyser, beats, the signal chain, the sound check, mute. **Session 2:** the Mac's own sound, a microphone, a host's player, and timing. | Bars dancing to a song file (now), then to Spotify or a browser | 2 |
+| 1 | **Hearing the music** (done 2026-10-03): the four sources, the analyser, beats, the signal chain, timing. Tests on generated tones, click tracks and a made-up song. Plain test bars and a beat light in the app. | Bars dancing to a song file, to Spotify or a browser, and to a microphone | done |
 | 2 | **The stage and quality tiers, with Visual 3 (Particle Wave):** the drawing, glow, particles, camera, frame counter, Low to Ultra, Auto | The first real visual | 2–3 |
 | 3 | **Visual 5 (Fountain)** | | 1 |
 | 4 | **Output options:** window, full screen on any screen, an output screen, frame rate, drawing size, brighter than white | Visuals on a TV or second monitor | 1–2 |

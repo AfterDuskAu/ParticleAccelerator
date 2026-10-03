@@ -63,3 +63,55 @@
 - Six tests listen to it and check the listener against those facts. That makes 59 tests.
 - `scripts/make_test_song.sh` writes the same song to `build/Test Song 124.wav` for trying in the app.
 - Checked in the app, muted: it reads 124 BPM.
+
+### Phase 1, session 2: the other three sources, and timing
+
+2026-10-03. The listener now hears all four sources, and keeps the picture in time with what's heard. That finishes phase 1.
+
+- **This Mac's sound** (`listenToThisMac()`): whatever any app is playing, through a Core Audio process tap (macOS 14.2 and later). It only listens: nothing is muted or changed.
+- **A microphone** (`listenToMicrophone()`): the input chosen in System Settings, followed if it changes.
+- **A host app's player** (`listen(to:)`): a listening tap on whatever the `AVPlayer` plays now and next. The host's own sound settings for the item are kept, and put back when listening stops.
+- **Timing:** each source knows how far ahead of the speakers it hears the sound, and the analyser only measures what has been heard.
+  - A song file and the Mac's sound wait for the output's delay, as Core Audio reports it.
+  - A player's tap is read by the player's own clock.
+  - A microphone needs no wait.
+  - `timingOffset` moves the picture later or earlier by up to half a second, for whatever is left.
+- **The sound check** now shows what it's listening to, each band's real loudness in decibels, a timing control, and a note when something needs saying.
+- **The app** has a Listen menu: Song File, This Mac's Sound (⌘1), Microphone (⌘2), Stop Listening (⌘.), and "Song File, the Way a Host App Plays It", which plays the file in a player of the app's own as a joined composition and hands that player to the listener. `--as-host` does the same for files opened at launch.
+- **Tests:** 83. The player source is tested with a real `AVPlayer` turned down to nothing.
+
+**Checked in the app on the iMac (2026-10-03):**
+
+- **The host's way:** the made-up song as a joined composition, silent, read 124 BPM.
+- **This Mac's sound:** heard the music the owner was playing, found its tempo, and showed its loudness.
+- **The microphone:** heard the room through the Mac's own microphone, at about −64 decibels.
+- **The permission with this ad-hoc-signed app:** after the app was rebuilt (which changes its signature) the Mac's sound was heard again within a second and a half, with nothing lost. Whether macOS showed its prompt the first time couldn't be seen from here.
+
+**Measured (2026-10-03):**
+
+- **A player's tap** is handed sound in blocks of 2,260 samples (47 ms), a steady 0.46 seconds before the speakers play it. What it's handed matches the file sample for sample, through a joined composition too.
+- **A muted player:** with `isMuted`, the tap is handed real sound for about four seconds and then silence for as long as the player stays muted. With `volume = 0` it's handed real sound throughout.
+- **Handing over a player that's already playing** makes it stop for about half a second while it sets its sound up again. Handed over before the item starts, nothing is heard.
+- **The output's delay:** the owner's Bluetooth headphones report 195 ms (8,079 samples of delay and a 512-sample buffer, at 44,100 a second). The iMac's own speakers weren't the output during this session, so their figure is still to be read.
+
+**Changes from the plan, and why:**
+
+- **The tap's listening device contains only the tap.** Apple's sample code also puts the output device in it. Left out, the device has no microphone and no speakers of its own, so a headset's microphone can never be opened by accident and nothing can be played through it.
+- **A Bluetooth headset is never used as the microphone.** Listening to one makes macOS switch it to call quality, which spoils the music the person is hearing (the owner's Mac had exactly this set up). The Mac's own microphone is used instead, with a note saying so. On a Mac with no microphone of its own, it's refused with the reason.
+- **The microphone and the tap are read with Core Audio directly**, not AVAudioEngine, whose tap only delivers every tenth of a second.
+- **The ring holds about six seconds, not one and a half.** A player's tap runs half a second ahead, so the ring has to keep more than the analyser looks at.
+- **The ring is kept when a player sets its sound up again** (after a stall or a seek), so the analyser doesn't forget the tempo.
+- **Sound too faint to be music has no beats and no tempo.** A quiet room through the microphone "found" a tempo in its hiss.
+
+**Known limits:**
+
+- **HLS and live streams** in a host's player can't be heard: macOS keeps their sound out of reach. `problem` says so.
+- **A player muted with `isMuted`** goes quiet to the visuals after about four seconds. That's how macOS mutes.
+- **Which microphone** follows System Settings. There's no chooser in the app yet.
+- **The joined composition used for checking has a sound track only.** No picture track was made for it.
+- **Not checked:**
+  - refusing the permission prompts (the sound check shows a hint after four seconds of silence, and the microphone gives a plain error)
+  - unplugging or changing the output while listening to the Mac's sound
+  - a player playing faster or slower than normal
+
+**A lesson about tests that play in real time.** All the tests start together, and for the first five or six seconds the ones that measure long stretches of sound keep every worker thread busy. Until they finish, macOS can't deliver timers or a player's callbacks: a 20 ms wait was seen to last six seconds, on the main thread's own timer too. A test that plays three seconds of sound then misses all of it. So each real-time test calls `waitForAQuietMoment()` first, and waits with `pause(seconds:)` instead of `Task.sleep`.

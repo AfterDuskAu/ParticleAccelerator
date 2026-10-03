@@ -1,8 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// A plain view of what the listener hears: the 64 spectrum bars, the six bands, the
-/// loudness and a beat light, with the song's play button and position.
+/// A plain view of what the listener hears, whatever it's listening to: the 64 spectrum
+/// bars, the six bands (with their real loudness in decibels), the loudness and a beat
+/// light. For a song file it has the play button and position, and for every source a
+/// timing control.
 ///
 /// It's for checking that the music is heard properly, before and after any visual is
 /// built on it. It stops drawing when its window can't be seen.
@@ -19,11 +21,12 @@ public struct SoundCheckView: View {
     }
 
     public var body: some View {
-        // With nothing playing, a few frames a second is plenty to let the bars settle.
+        // With a song file paused, a few frames a second is plenty to let the bars settle.
+        let isLive = listener.isPlaying || (listener.source != .songFile && listener.source != .nothing)
         TimelineView(
             .animation(
-                minimumInterval: listener.isPlaying ? nil : 1.0 / 20,
-                paused: !isWindowVisible || listener.songTitle == nil)
+                minimumInterval: isLive ? nil : 1.0 / 20,
+                paused: !isWindowVisible || listener.source == .nothing)
         ) { timeline in
             let display = meters.update(listener.reading(), at: timeline.date)
             VStack(alignment: .leading, spacing: 20) {
@@ -34,18 +37,25 @@ public struct SoundCheckView: View {
                     ForEach(Band.allCases, id: \.self) { band in
                         LevelMeter(
                             level: display.bands[band], name: band.name,
-                            detail: Self.pitches(of: band), colour: Self.colour(of: band))
+                            detail: Self.pitches(of: band),
+                            decibels: display.reading.bandDecibels[band], colour: Self.colour(of: band))
                     }
                     LevelMeter(
                         level: display.loudness, name: "Loudness", detail: "everything",
-                        colour: .white)
+                        decibels: display.reading.loudnessDecibels, colour: .white)
                     Spacer(minLength: 12)
                     BeatLight(
                         pulse: display.beat, beatsPerMinute: display.reading.beatsPerMinute,
                         steadyBeats: display.reading.steadyBeats, isPlaying: listener.isPlaying)
                 }
-                .frame(height: 150)
+                .frame(height: 165)
                 controls
+                if let note = listener.problem ?? problem ?? hint(silentSeconds: display.silentSeconds) {
+                    Text(note)
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .padding(24)
         }
@@ -57,7 +67,7 @@ public struct SoundCheckView: View {
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(listener.songTitle ?? "No song")
+            Text(title)
                 .font(.title2.weight(.semibold))
                 .lineLimit(1)
             Spacer()
@@ -67,52 +77,90 @@ public struct SoundCheckView: View {
         }
     }
 
+    private var title: String {
+        switch listener.source {
+        case .nothing: return "Nothing playing"
+        case .player: return listener.sourceName ?? "A player"
+        default: return listener.sourceName ?? ""
+        }
+    }
+
     private var controls: some View {
+        HStack(spacing: 12) {
+            switch listener.source {
+            case .songFile, .nothing:
+                songControls
+            case .thisMac:
+                Label("Listening to everything this Mac plays", systemImage: "desktopcomputer")
+                Spacer()
+            case .microphone:
+                Label("Listening to the microphone", systemImage: "mic.fill")
+                Spacer()
+            case .player:
+                Label("Listening to an app's player", systemImage: "play.rectangle.fill")
+                Spacer()
+            }
+            timingControl
+        }
+    }
+
+    @ViewBuilder private var songControls: some View {
         let hasSong = listener.songTitle != nil
         let time = draggedTime ?? listener.currentTime
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 12) {
-                Button {
-                    playOrPause()
-                } label: {
-                    Image(systemName: listener.isPlaying ? "pause.fill" : "play.fill")
-                        .frame(width: 18, height: 18)
-                }
-                .help(listener.isPlaying ? "Pause" : "Play")
-                .disabled(!hasSong)
+        Button {
+            playOrPause()
+        } label: {
+            Image(systemName: listener.isPlaying ? "pause.fill" : "play.fill")
+                .frame(width: 18, height: 18)
+        }
+        .help(listener.isPlaying ? "Pause" : "Play")
+        .disabled(!hasSong)
 
-                Button {
-                    listener.isMuted.toggle()
-                } label: {
-                    Image(systemName: listener.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                        .frame(width: 18, height: 18)
-                }
-                .help(listener.isMuted ? "Turn the sound back on" : "Mute: the bars still move")
-                .accessibilityLabel(listener.isMuted ? "Unmute" : "Mute")
+        Button {
+            listener.isMuted.toggle()
+        } label: {
+            Image(systemName: listener.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                .frame(width: 18, height: 18)
+        }
+        .help(listener.isMuted ? "Turn the sound back on" : "Mute: the bars still move")
+        .accessibilityLabel(listener.isMuted ? "Unmute" : "Mute")
 
-                Text(Self.clock(time))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                Slider(
-                    value: Binding(get: { time }, set: { draggedTime = $0 }),
-                    in: 0...max(listener.duration, 0.1)
-                ) { isDragging in
-                    if !isDragging, let draggedTime {
-                        listener.seek(to: draggedTime)
-                        self.draggedTime = nil
-                    }
-                }
-                .disabled(!hasSong)
-                Text(Self.clock(listener.duration))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-            }
-            if let problem {
-                Text(problem)
-                    .font(.callout)
-                    .foregroundStyle(.orange)
+        Text(Self.clock(time))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+        Slider(
+            value: Binding(get: { time }, set: { draggedTime = $0 }),
+            in: 0...max(listener.duration, 0.1)
+        ) { isDragging in
+            if !isDragging, let draggedTime {
+                listener.seek(to: draggedTime)
+                self.draggedTime = nil
             }
         }
+        .disabled(!hasSong)
+        Text(Self.clock(listener.duration))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+    }
+
+    /// Shows the bars a little later or earlier, in steps of a hundredth of a second.
+    private var timingControl: some View {
+        let thousandths = Binding(
+            get: { (listener.timingOffset * 1_000).rounded() },
+            set: { listener.timingOffset = $0 / 1_000 })
+        return Stepper(value: thousandths, in: -500...500, step: 10) {
+            Text("Timing \(Self.signed(Int(thousandths.wrappedValue))) ms")
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+        }
+        .help("Show the picture later (+) or earlier (−) than the sound, if they don't line up")
+        .fixedSize()
+    }
+
+    /// Nothing at all has been heard from the Mac for a while: say what may be wrong.
+    private func hint(silentSeconds: Double) -> String? {
+        guard listener.source == .thisMac, silentSeconds > 4 else { return nil }
+        return "Nothing heard yet. If something is playing, allow Particle Accelerator in System Settings → Privacy & Security → Screen & System Audio Recording, then choose This Mac's Sound again."
     }
 
     private func playOrPause() {
@@ -129,6 +177,16 @@ public struct SoundCheckView: View {
     }
 
     // MARK: Words and colours
+
+    /// 20 as "+20", -30 as "−30" and 0 as "0".
+    static func signed(_ number: Int) -> String {
+        number > 0 ? "+\(number)" : number < 0 ? "−\(-number)" : "0"
+    }
+
+    /// A loudness in decibels as "−23 dB", or a dash for silence.
+    static func decibelsText(_ decibels: Float) -> String {
+        decibels <= SoundReading.silenceDecibels + 1 ? "–" : "\(signed(Int(decibels.rounded()))) dB"
+    }
 
     /// 83 seconds as "1:23".
     static func clock(_ seconds: TimeInterval) -> String {
@@ -171,6 +229,8 @@ private final class SoundCheckMeters {
         var bands = BandValues()
         var loudness: Float = 0
         var beat: Float = 0
+        /// How long it's been since anything at all was heard.
+        var silentSeconds: Double = 0
     }
 
     private static let quick = SignalShape(riseSeconds: 0.01, fallSeconds: 0.15)
@@ -193,6 +253,8 @@ private final class SoundCheckMeters {
         }
         display.loudness = loudness.update(reading, seconds: seconds)
         display.beat = beat.update(reading, seconds: seconds)
+        let isSilent = reading.loudnessDecibels <= SoundReading.silenceDecibels + 1
+        display.silentSeconds = isSilent ? display.silentSeconds + seconds : 0
         return display
     }
 }
@@ -222,6 +284,8 @@ private struct LevelMeter: View {
     let level: Float
     let name: String
     let detail: String
+    /// The real loudness, before auto-gain.
+    let decibels: Float
     let colour: Color
 
     var body: some View {
@@ -239,12 +303,17 @@ private struct LevelMeter: View {
             Text(detail)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+            Text(SoundCheckView.decibelsText(decibels))
+                .font(.caption2)
+                .monospacedDigit()
+                .foregroundStyle(.tertiary)
+                .frame(minWidth: 44)
         }
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(name), \(detail)")
-        .accessibilityValue("\(Int((level * 100).rounded())) percent")
+        .accessibilityValue("\(Int((level * 100).rounded())) percent, \(SoundCheckView.decibelsText(decibels))")
     }
 }
 

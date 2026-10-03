@@ -132,3 +132,12 @@ func aSnareOnEveryOtherBeatDoesntHalveTheTempo(beatsPerMinute: Double) throws {
     let reading = listener.hear(TestSound.silence(seconds: 6))
     #expect(reading.beatsPerMinute == nil)
 }
+
+@Test func soundTooFaintToBeMusicHasNoBeatsAndNoTempo() {
+    // Kicks 70 decibels below full volume: what a microphone hears of headphones
+    // across a quiet room.
+    let faint = TestSound.kicks(beatsPerMinute: 120, seconds: 12, amplitude: 0.0003)
+    let reading = TestListener().hear(faint)
+    #expect(reading.beatsHeard == 0)
+    #expect(reading.beatsPerMinute == nil)
+}
