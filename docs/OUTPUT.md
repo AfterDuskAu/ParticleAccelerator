@@ -45,6 +45,19 @@ Suggested: **High at 60 fps**, Medium at 120 fps. The particle count matters far
 
 To add: a Mac Studio, an Apple Silicon laptop. Run `pa-bench` on it and add its table here.
 
+### Visualizer 3 (Particle Wave)
+
+**2019 iMac, 2026-10-03.** The graphics card's time for a whole frame (sparks moved and drawn, glow, finishing), in a release build, each tier at its full size:
+
+| Tier | Sparks | Picture | Per frame |
+|---|---|---|---|
+| Low | 75,000 | 1280×720 | 0.7 ms |
+| Medium | 150,000 | 1920×1080 | 1.6 ms |
+| High | 300,000 | 2560×1440 | 3.9 ms (slowest 6.1) |
+| Ultra | 1,000,000 | 3840×2160 | 26.2 ms |
+
+High holds 60 fps on the iMac with room to spare. Ultra needs a faster Mac. The processor's share of a frame is about 0.2 ms, and the app uses about 4% of one core while the visual shows.
+
 ### Hearing the music
 
 **2019 iMac, 2026-10-03:**

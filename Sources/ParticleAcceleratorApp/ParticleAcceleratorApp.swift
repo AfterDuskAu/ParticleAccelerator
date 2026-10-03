@@ -18,12 +18,34 @@ struct ParticleAcceleratorApp: App {
 
     var body: some Scene {
         Window("Particle Accelerator", id: "main") {
-            MainView(listener: appDelegate.listener) { urls in
+            MainView(listener: appDelegate.listener, choices: appDelegate.choices) { urls in
                 appDelegate.play(urls)
             }
             .frame(minWidth: 820, minHeight: 520)
         }
         .commands {
+            // These go in the View menu, above Enter Full Screen.
+            CommandGroup(before: .toolbar) {
+                let choices = appDelegate.choices
+                Toggle("Sound Check", isOn: Binding(
+                    get: { choices.showsSoundCheck }, set: { choices.showsSoundCheck = $0 }))
+                    .keyboardShortcut("d")
+                Toggle("Frame Time", isOn: Binding(
+                    get: { choices.settings.showsFrameTime },
+                    set: { choices.settings.showsFrameTime = $0 }))
+                    .keyboardShortcut("t")
+                Picker("Quality", selection: Binding(
+                    get: { choices.settings.quality }, set: { choices.settings.quality = $0 })
+                ) {
+                    Text("Auto").tag(Quality.auto)
+                    Divider()
+                    Text("Low").tag(Quality.low)
+                    Text("Medium").tag(Quality.medium)
+                    Text("High").tag(Quality.high)
+                    Text("Ultra").tag(Quality.ultra)
+                }
+                Divider()
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Open…") { appDelegate.chooseSong(asHost: false) }
                     .keyboardShortcut("o")
@@ -66,38 +88,68 @@ struct ParticleAcceleratorApp: App {
     }
 }
 
-/// The window: for now the library's sound check, which takes a song dropped on it.
+/// What the person has chosen in the app. The settings are saved in the app's own
+/// preferences, and read back the next time it opens.
+@MainActor
+@Observable
+final class Choices {
+    private static let settingsKey = "AcceleratorSettings"
+
+    var settings: AcceleratorSettings {
+        didSet {
+            guard settings != oldValue, let saved = try? JSONEncoder().encode(settings) else { return }
+            UserDefaults.standard.set(saved, forKey: Self.settingsKey)
+        }
+    }
+    /// Shows the plain bars and meters instead of the visual.
+    var showsSoundCheck = false
+
+    init() {
+        let saved = UserDefaults.standard.data(forKey: Self.settingsKey)
+        settings = saved.flatMap { try? JSONDecoder().decode(AcceleratorSettings.self, from: $0) }
+            ?? AcceleratorSettings()
+    }
+}
+
+/// The window: the visual, or the sound check. Either takes a song dropped on it.
 private struct MainView: View {
     let listener: MusicListener
+    let choices: Choices
     let play: ([URL]) -> Void
     @State private var isDropTarget = false
 
     var body: some View {
-        SoundCheckView(listener: listener)
-            .overlay(alignment: .top) {
-                if listener.source == .nothing {
-                    VStack(spacing: 6) {
-                        Text("Drop a song file here, or choose from the Listen menu")
-                            .font(.title3)
-                        Text("Particle Accelerator \(Accelerator.version)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 110)
-                    .environment(\.colorScheme, .dark)
-                }
+        Group {
+            if choices.showsSoundCheck {
+                SoundCheckView(listener: listener)
+            } else {
+                AcceleratorView(listener: listener, settings: choices.settings)
             }
-            .overlay {
-                if isDropTarget {
-                    RoundedRectangle(cornerRadius: 10)
-                        .strokeBorder(Color.accentColor, lineWidth: 3)
-                        .padding(6)
+        }
+        .overlay(alignment: .top) {
+            if listener.source == .nothing {
+                VStack(spacing: 6) {
+                    Text("Drop a song file here, or choose from the Listen menu")
+                        .font(.title3)
+                    Text("Particle Accelerator \(Accelerator.version)")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.top, 110)
+                .environment(\.colorScheme, .dark)
             }
-            .dropDestination(for: URL.self) { urls, _ in
-                play(urls)
-                return !urls.isEmpty
-            } isTargeted: { isDropTarget = $0 }
+        }
+        .overlay {
+            if isDropTarget {
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(Color.accentColor, lineWidth: 3)
+                    .padding(6)
+            }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            play(urls)
+            return !urls.isEmpty
+        } isTargeted: { isDropTarget = $0 }
     }
 }
 
@@ -106,6 +158,7 @@ private struct MainView: View {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let listener = MusicListener()
+    let choices = Choices()
     /// When the app plays a song the way a host app would, this is its player.
     private var hostPlayer: AVPlayer?
     /// `--as-host`: song files handed to the app are played the way a host app would.
@@ -119,6 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--muted") {
             listener.isMuted = true
         }
+
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

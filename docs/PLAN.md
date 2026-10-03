@@ -1,6 +1,6 @@
 # Plan
 
-**Status, 2026-10-03:** phase 1 is done. The listener hears a song file, whatever the Mac is playing, a microphone, or a host app's player, and the app shows what it hears: spectrum bars, six bands, loudness, a beat light and the tempo. No visual is built yet. Next is phase 2: the stage, and Visual 3 (Particle Wave).
+**Status, 2026-10-03:** phase 1 is done and phase 2 is under way. The stage is built and Visualizer 3 (Particle Wave) is on screen in a first version, moving to a song file, the Mac's sound, a microphone or a host app's player. Next: the owner's notes on it, Auto quality that adapts, and the flashing limit.
 
 ## What it is
 
@@ -80,7 +80,7 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 |---|---|---|---|
 | 0 | **Set up** (done 2026-10-03): the repo, rules, plan, secret checks, CI, a first app window, `pa-bench` | A window listing the visuals | done |
 | 1 | **Hearing the music** (done 2026-10-03): the four sources, the analyser, beats, the signal chain, timing. Tests on generated tones, click tracks and a made-up song. Plain test bars and a beat light in the app. | Bars dancing to a song file, to Spotify or a browser, and to a microphone | done |
-| 2 | **The stage and quality tiers, with Visual 3 (Particle Wave):** the drawing, glow, particles, camera, frame counter, Low to Ultra, Auto | The first real visual | 2–3 |
+| 2 | **The stage and quality tiers, with Visual 3 (Particle Wave):** the drawing, glow, particles, camera, frame counter, Low to Ultra, Auto. **Session 1 done 2026-10-03:** the stage, the tiers, and a first version of Visual 3. **Still to do:** the owner's notes, Auto that adapts, the flashing limit. | The first real visual | 2–3 |
 | 3 | **Visual 5 (Fountain)** | | 1 |
 | 4 | **Output options:** window, full screen on any screen, an output screen, frame rate, drawing size, brighter than white | Visuals on a TV or second monitor | 1–2 |
 | 5 | **Visual 1 (Ring & Ink)**, with the cover from a song file's own tags | | 1–2 |

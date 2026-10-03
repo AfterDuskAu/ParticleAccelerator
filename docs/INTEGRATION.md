@@ -28,13 +28,16 @@ AcceleratorView(
 
 **3. Keep the settings:** `AcceleratorSettings` is `Codable`, so the host saves it wherever it keeps its own settings. The library never saves anything itself.
 
-That's the plan for version 1.0.0. **What works today** (there's no visual yet, only the sound check):
+That's the plan for version 1.0.0. **What works today:**
 
 ```swift
 let listener = MusicListener()
-listener.listen(to: player)        // once, when the player is made
-SoundCheckView(listener: listener) // bars, meters and a beat light
+listener.listen(to: player)                              // once, when the player is made
+AcceleratorView(listener: listener, settings: settings)  // the visual
+SoundCheckView(listener: listener)                       // or plain bars and meters
 ```
+
+`settings` is an `AcceleratorSettings`: which visual (only 3 so far), the quality, and whether to show the frame time. The artwork comes with Visualizer 1.
 
 Three things a host should know about its player:
 
@@ -76,3 +79,6 @@ The API is still a plan until version 1.0.0, and these may change before then.
   - `MusicListener.timingOffset`: shows the visuals up to half a second later or earlier.
   - A host that uses `listenToThisMac()` or `listenToMicrophone()` needs `NSAudioCaptureUsageDescription` or `NSMicrophoneUsageDescription` in its Info.plist. Listening to its own player needs neither.
 - **0.1.0, 2026-10-03, changed:** `VisualInfo.title` is now the number only ("Visualizer 3"), not the number and name ("3 · Particle Wave"). `name` is unchanged.
+- **0.1.0, 2026-10-03, added in phase 2:**
+  - `AcceleratorView(listener:settings:)`: the visual.
+  - `AcceleratorSettings` (`visual`, `quality`, `limitsFlashing`, `showsFrameTime`) and `Quality` (`auto`, `low`, `medium`, `high`, `ultra`). `limitsFlashing` has nothing behind it yet.

@@ -2,7 +2,7 @@
 
 Visuals that move with the music, for the Mac. Particles, light, ink and 3D shapes are driven live by the real sound of a song file, whatever the Mac is playing, or a microphone. It works on an older Intel iMac and scales up to a Mac Studio on a 4K or 6K screen.
 
-**Status:** early (version 0.1.0). The app listens to a song file, to whatever the Mac is playing, or to a microphone, and shows what it hears: the spectrum, six bands, the loudness, each beat and the tempo. No visual is built yet. See [`docs/PLAN.md`](docs/PLAN.md).
+**Status:** early (version 0.1.0). The first visual, Visualizer 3 (Particle Wave), is on screen in a first version. It moves to a song file, to whatever the Mac is playing, or to a microphone. See [`docs/PLAN.md`](docs/PLAN.md).
 
 ## The visuals
 
@@ -10,7 +10,7 @@ Visuals that move with the music, for the Mac. Particles, light, ink and 3D shap
 |---|---|---|
 | 1 | Ring & Ink | planned |
 | 2 | Iron Maw | planned |
-| 3 | Particle Wave | planned (first) |
+| 3 | Particle Wave | first version built |
 | 4 | Tendrils | planned |
 | 5 | Fountain | planned |
 | 6 | Starburst | planned |
@@ -30,6 +30,8 @@ Then choose what to listen to:
 - **A song file:** drop it on the window, or choose File → Open… Space plays and pauses, and ⇧⌘M mutes the speakers while the bars keep moving.
 - **Whatever the Mac is playing** (Spotify, a browser): Listen → This Mac's Sound. It needs macOS 14.2 or later, and macOS asks for permission the first time.
 - **A microphone:** Listen → Microphone. It uses the input chosen in System Settings → Sound.
+
+In the View menu: Quality (Auto, Low, Medium, High, Ultra), Frame Time (how long each frame takes), and Sound Check (plain bars and meters in place of the visual).
 
 To start it muted (for checking the picture without any sound):
 

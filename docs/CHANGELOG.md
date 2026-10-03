@@ -122,3 +122,52 @@
 
 - **Menus show a visual by its number only**, such as "Visualizer 3" (the owner's choice, for now). `VisualInfo.title` changed to match; `name` is still there for the docs.
 - **The flashing limit is on by default, and a setting turns it off** (the owner's choice). `CLAUDE.md` rule 8 now says so. It's built with the stage in phase 2.
+
+### Phase 2, session 1: the stage, and Visualizer 3 (Particle Wave)
+
+2026-10-03. The first real visual is on screen, moving to the music. It's a first version: the owner hasn't watched it and given notes yet, so it isn't marked built.
+
+- **The stage** (`Stage/`):
+  - The visual is drawn into a floating-point picture at the quality tier's size, so light can be far brighter than white.
+  - Glow is made from five smaller and smaller copies of the picture, added back together.
+  - Finishing tones the picture to the screen, keeping colours saturated, with a vignette and fine grain that hides banding.
+  - A display link of the view's own tells it when to draw. It stops when the window can't be seen, and drops to 20 frames a second after three seconds of silence.
+  - Setting up (compiling shaders, making the sparks) happens away from the main thread.
+- **Shaders** are Metal source in Swift files, compiled when the stage starts. A test compiles them all, and another asks Metal where it put each uniform and checks that against Swift.
+- **A camera** with perspective that never stands still: a slow drift, a gentle roll, a slow breath, and a small punch on each beat. Sparks nearer or further than the line go slightly soft.
+- **The frame-time counter:** frames a second, the graphics card's time for a frame (average and slowest), and the processor's time. View → Frame Time shows it.
+- **Quality tiers** Low, Medium, High and Ultra, as in `OUTPUT.md`. More sparks make a finer picture, not a brighter one. Auto picks High, or Medium on a laptop's low-power graphics; it doesn't adapt yet.
+- **Visualizer 3:**
+  - The graphics card moves every spark each frame.
+  - The spectrum is shaped into separate mountains across the whole width.
+  - The line brightens with the loudness, and each kick sends a ripple along it from the bass end.
+- **`AcceleratorView(listener:settings:)`** and **`AcceleratorSettings`** are the public way to show a visual. The app shows the visual by default; View → Sound Check (⌘D) swaps to the bars. The app saves its settings in its own preferences.
+- **Tests:** 109.
+
+**Measured on the iMac (2026-10-03), release build, each tier at its full size:**
+
+| Tier | Sparks | Picture | Graphics card per frame |
+|---|---|---|---|
+| Low | 75,000 | 1280×720 | 0.7 ms |
+| Medium | 150,000 | 1920×1080 | 1.6 ms |
+| High | 300,000 | 2560×1440 | 3.9 ms (slowest 6.1) |
+| Ultra | 1,000,000 | 3840×2160 | 26.2 ms |
+
+- **High holds 60 fps** with room to spare (a frame allows 16.7 ms). Ultra doesn't on this Mac, as expected.
+- **In the app:** 60 fps and 1.9 ms a frame at High in an 1800×1040 window, with the sample song playing muted.
+- **Processor:** about 4% of one core while showing, 0.3% when minimised.
+- **Flashing:** across two and a half minutes of the sample song, the whole picture's brightness never moved by more than 2.1% of white within a third of a second. A flash is a swing of 10% or more, so this visual doesn't flash.
+
+**Changes from the plan, and why:**
+
+- **The spectrum isn't drawn as it stands.** A real song's spectrum is broadly full, and as it stands it made one wide flat band, not the separate peaks in the reference. Each part of the spectrum is now measured against its own recent loudest moment, on a plain loudness scale, and each peak is spread into a triangle.
+- **The view runs a display link of its own.** MTKView's built-in timer ran but never asked for a frame when the app was opened with a song.
+- **The screen's drawable is kept at the picture's size** and the screen scales it up, rather than drawing a full 5K frame.
+- **Brighter than white (EDR)** waits for phase 4, where the roadmap has it. The picture is drawn in floating point already.
+
+**Still to do in phase 2:**
+
+- **The owner's notes on Visualizer 3**, and tuning until they're happy. Then it's marked built.
+- **Auto quality that adapts** while it plays.
+- **The flashing limit itself.** The setting exists and is on, but there's nothing behind it yet. Visualizer 3 doesn't need it (measured above); a visual that flashes will.
+- **Fog.** The camera has a setting for it that no visual uses yet.

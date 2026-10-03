@@ -8,7 +8,7 @@ The pictures are references only. Each visual is drawn by code in the same style
 |---|---|---|---|---|
 | 1 | Ring & Ink | very close | ★★ | planned |
 | 2 | Iron Maw | a stylised version | ★★★★★ | planned |
-| 3 | Particle Wave | very close | ★★ | planned (built first) |
+| 3 | Particle Wave | very close | ★★ | first version built 2026-10-03; waiting for the owner's notes |
 | 4 | Tendrils | close in motion | ★★★★ | planned |
 | 5 | Fountain | very close | ★ | planned |
 | 6 | Starburst | close | ★★★ | planned; picture still to be saved in `references/` |
@@ -39,6 +39,11 @@ The pictures are references only. Each visual is drawn by code in the same style
 - **With the music:** the peaks are the spectrum, bass on the left and highs on the right. Sparks ride their peaks with a little drift, then fall and fade. The line brightens and flickers with loudness, and a kick sends a ripple along it.
 - **How close:** very close.
 - **Needs:** particles on the graphics card, glow, the spectrum. Built first, because it shows straight away whether the sound is being read correctly.
+- **As built (first version, 2026-10-03):**
+  - The peaks aren't the raw spectrum. Each part of it is measured against its own recent loudest moment, so there are separate mountains right across, as in the picture, and not one flat band.
+  - A third of the sparks are the reflection, and a few float clear of the peaks.
+  - One spark in eight is bright enough to be seen by itself; the rest make a mist.
+  - Each kick's ripple runs along the line from the bass end.
 
 ## 4. Tendrils ★★★★
 
