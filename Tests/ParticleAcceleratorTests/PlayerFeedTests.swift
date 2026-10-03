@@ -180,8 +180,12 @@ func aPausedPlayerReadsQuietButKeepsItsPlace() async throws {
     #expect(heardTheTone)
 
     player.pause()
-    await wait(upTo: 10) { player.timeControlStatus == .paused }
-    let paused = listener.reading()
+    // The item's clock stops a moment after the player says it has paused.
+    var paused = listener.reading()
+    await wait(upTo: 10) {
+        paused = listener.reading()
+        return player.timeControlStatus == .paused && paused.loudness == 0
+    }
     #expect(paused.bands == BandValues())
     #expect(paused.loudness == 0)
     #expect(paused.seconds > 0.5)
@@ -351,7 +355,61 @@ func theAnalyserKeepsItsMemoryWhenThePlayerSeeks() async throws {
     #expect(feed.ring === ringBefore)
     let offset = try #require(feed.timeOffset)
     #expect(Double(feed.ring.totalWritten) / rate + offset > 10)
-    #expect(abs(Double(feed.heardUpTo) / rate + offset - player.currentTime().seconds) < 0.05)
+    // Once the player is under way again, the place the feed gives is the player's
+    // own. (For a quarter of a second after a seek the item's clock runs up to the
+    // new place from just before it, while the player's time waits there.)
+    await wait(upTo: 20) { player.timeControlStatus == .playing && player.currentTime().seconds > 10.5 }
+    let offsetNow = try #require(feed.timeOffset)
+    #expect(abs(Double(feed.heardUpTo) / rate + offsetNow - player.currentTime().seconds) < 0.05)
+}
+
+@MainActor
+@Test(.enabled(if: macHasSoundOutput, "This computer has no sound output to play through."))
+func theStagesThreadIsToldWhereThePlayerIsAndWhetherItIsPaused() async throws {
+    await waitForAQuietMoment()
+    // The stage asks what's been heard from a thread of its own, where the player
+    // itself mustn't be asked anything.
+    let folder = try TemporaryFolder()
+    let url = folder.file("Long tone.caf")
+    let sound = tone(hz: 300, amplitude: 0.5, seconds: 20, sampleRate: rate)
+    try writeSoundFile(left: sound, right: sound, sampleRate: rate, to: url)
+    let item = AVPlayerItem(url: url)
+    let player = AVPlayer(playerItem: item)
+    player.volume = 0
+    let feed = PlayerFeed(player: player)
+    defer { feed.shutDown() }
+    await wait(upTo: 20) { item.audioMix != nil }
+
+    /// What the feed says, asked from another thread.
+    func heardFromAnotherThread() -> Heard {
+        let answered = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var heard: Heard?
+        // `heard` is the one thing a feed lets another thread ask.
+        nonisolated(unsafe) let asked = feed
+        Thread.detachNewThread {
+            heard = asked.heard()
+            answered.signal()
+        }
+        answered.wait()
+        return heard!
+    }
+
+    // Before it plays, it's held still.
+    #expect(heardFromAnotherThread().isHeldStill)
+
+    player.play()
+    await wait(upTo: 20) { feed.timeOffset != nil && player.currentTime().seconds > 0.5 }
+    let offset = try #require(feed.timeOffset)
+    let playing = heardFromAnotherThread()
+    #expect(!playing.isHeldStill)
+    #expect(playing.ring.sampleRate == rate)
+    // The place it gives is the player's own, to within a twentieth of a second (the
+    // player moves on between the two being asked).
+    #expect(abs(Double(playing.upTo) / rate + offset - player.currentTime().seconds) < 0.05)
+
+    player.pause()
+    await wait(upTo: 10) { heardFromAnotherThread().isHeldStill }
+    #expect(heardFromAnotherThread().isHeldStill)
 }
 
 @MainActor

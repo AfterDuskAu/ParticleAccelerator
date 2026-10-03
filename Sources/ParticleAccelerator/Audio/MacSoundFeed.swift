@@ -1,5 +1,6 @@
 import CoreAudio
 import Foundation
+import os
 
 /// Hears whatever this Mac is playing: Spotify, a browser, any app.
 ///
@@ -13,18 +14,27 @@ import Foundation
 @available(macOS 14.2, *)
 final class MacSoundFeed: SoundFeed {
     private var parts: Parts
-    private var delaySamples: Int64
     private var outputWatcher: DeviceWatcher?
+    /// What `heard` needs: the ring being filled, and how long the Mac's output takes
+    /// to play a sample. The stage's thread reads them while the main thread may be
+    /// changing them (new speakers).
+    private let heardFrom: OSAllocatedUnfairLock<HeardFrom>
 
-    var ring: SampleRing { parts.listening.ring }
+    private struct HeardFrom: Sendable {
+        var ring: SampleRing
+        var delaySamples: Int64
+    }
+
     /// The tap hears the sound as it's handed to the speakers, a moment before it
     /// comes out of them.
-    var heardUpTo: Int64 { ring.totalWritten - delaySamples }
-    var isHeldStill: Bool { false }
+    func heard() -> Heard {
+        let from = heardFrom.withLock { $0 }
+        return Heard(ring: from.ring, upTo: from.ring.totalWritten - from.delaySamples, isHeldStill: false)
+    }
 
     init() throws {
         parts = try Self.build()
-        delaySamples = Self.delaySamples(for: parts)
+        heardFrom = OSAllocatedUnfairLock(initialState: Self.heardFrom(parts))
         // New speakers or headphones can run at a different sample rate and take a
         // different time to play: start again on them.
         outputWatcher = SoundDevices.watchDefaultDevice(input: false) { [weak self] in
@@ -48,7 +58,8 @@ final class MacSoundFeed: SoundFeed {
         guard let newParts = try? Self.build() else { return }
         Self.takeDown(parts)
         parts = newParts
-        delaySamples = Self.delaySamples(for: newParts)
+        let from = Self.heardFrom(newParts)
+        heardFrom.withLock { $0 = from }
     }
 
     // MARK: Building and taking down
@@ -59,8 +70,9 @@ final class MacSoundFeed: SoundFeed {
         var listening: DeviceListening
     }
 
-    private static func delaySamples(for parts: Parts) -> Int64 {
-        Int64(SoundDevices.outputDelaySeconds() * parts.listening.ring.sampleRate)
+    private static func heardFrom(_ parts: Parts) -> HeardFrom {
+        let ring = parts.listening.ring
+        return HeardFrom(ring: ring, delaySamples: Int64(SoundDevices.outputDelaySeconds() * ring.sampleRate))
     }
 
     private static func build() throws -> Parts {

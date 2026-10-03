@@ -1,5 +1,6 @@
 import AVFoundation
 import CoreAudio
+import os
 
 /// Hears a microphone or line input: a room, a turntable, a band. It listens to
 /// whichever input is chosen in System Settings → Sound → Input, and follows it if
@@ -20,12 +21,16 @@ final class MicrophoneFeed: SoundFeed {
     private var listening: DeviceListening
     private var inputWatcher: DeviceWatcher?
     private var isShutDown = false
+    /// The ring being filled. The stage's thread reads it while the main thread may be
+    /// changing it (a different input).
+    private let currentRing: OSAllocatedUnfairLock<SampleRing>
 
-    var ring: SampleRing { listening.ring }
     /// The room has already heard the sound by the time the microphone has, so there's
     /// nothing to wait for.
-    var heardUpTo: Int64 { ring.totalWritten }
-    var isHeldStill: Bool { false }
+    func heard() -> Heard {
+        let ring = currentRing.withLock { $0 }
+        return Heard(ring: ring, upTo: ring.totalWritten, isHeldStill: false)
+    }
 
     /// Asks the person, the first time, whether this app may use the microphone.
     /// Returns whether it may.
@@ -79,6 +84,7 @@ final class MicrophoneFeed: SoundFeed {
     init() throws {
         let choice = try Self.chooseInput()
         listening = try Self.listen(to: choice)
+        currentRing = OSAllocatedUnfairLock(initialState: listening.ring)
         inputName = choice.name
         note = choice.note
         inputWatcher = SoundDevices.watchDefaultDevice(input: true) { [weak self] in
@@ -100,6 +106,8 @@ final class MicrophoneFeed: SoundFeed {
             let newListening = try Self.listen(to: choice)
             listening.stop()
             listening = newListening
+            let ring = newListening.ring
+            currentRing.withLock { $0 = ring }
             inputName = choice.name
             note = choice.note
         } catch {

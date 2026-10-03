@@ -78,38 +78,19 @@ public struct AcceleratorControls: View {
             Text("Colours")
                 .font(.headline)
             ForEach(Band.allCases, id: \.self) { band in
-                HStack(spacing: 6) {
-                    ColorPicker(
-                        "\(band.name) (\(SoundCheckView.pitches(of: band)))", selection: colour(of: band),
-                        supportsOpacity: false)
-                    ResetButton(
-                        isChanged: settings.controls.isColourChanged(band), name: "\(band.name) colour",
-                        help: "Back to the band's own colour"
-                    ) {
-                        settings.controls.resetColour(of: band)
-                    }
-                }
+                ColourRow(
+                    band: band, colour: settings.controls.colour(of: band),
+                    isChanged: settings.controls.isColourChanged(band),
+                    set: { settings.controls.setColour($0, for: band) },
+                    reset: { settings.controls.resetColour(of: band) }
+                )
+                .equatable()
             }
             Text("The sound check's bars and meters use the same colours.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private func colour(of band: Band) -> Binding<Color> {
-        Binding(
-            get: {
-                let colour = settings.controls.colour(of: band)
-                return Color(.sRGB, red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
-            },
-            set: { picked in
-                // The colour panel can hand back a colour in any colour space.
-                guard let shown = NSColor(picked).usingColorSpace(.sRGB) else { return }
-                settings.controls.setColour(
-                    SIMD3(Float(shown.redComponent), Float(shown.greenComponent), Float(shown.blueComponent)),
-                    for: band)
-            })
     }
 
     /// The controls under their headings, in the order the visual lists them.
@@ -164,6 +145,37 @@ private struct ControlRow: View, Equatable {
             .accessibilityValue(control.text(for: value))
         }
         .help(control.help)
+    }
+}
+
+/// One band's colour: a colour picker, and a way back to the band's own colour.
+private struct ColourRow: View, Equatable {
+    let band: Band
+    let colour: SIMD3<Float>
+    let isChanged: Bool
+    let set: (SIMD3<Float>) -> Void
+    let reset: () -> Void
+
+    static func == (one: ColourRow, other: ColourRow) -> Bool {
+        one.band == other.band && one.colour == other.colour && one.isChanged == other.isChanged
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ColorPicker(
+                "\(band.name) (\(SoundCheckView.pitches(of: band)))",
+                selection: Binding(
+                    get: { Color(.sRGB, red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z)) },
+                    set: { picked in
+                        // The colour panel can hand back a colour in any colour space.
+                        guard let shown = NSColor(picked).usingColorSpace(.sRGB) else { return }
+                        set(SIMD3(Float(shown.redComponent), Float(shown.greenComponent), Float(shown.blueComponent)))
+                    }),
+                supportsOpacity: false)
+            ResetButton(
+                isChanged: isChanged, name: "\(band.name) colour", help: "Back to the band's own colour",
+                reset: reset)
+        }
     }
 }
 

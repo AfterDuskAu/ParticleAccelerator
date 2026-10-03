@@ -33,11 +33,11 @@ struct ParticleAcceleratorApp: App {
                     get: { choices.showsControls }, set: { choices.showsControls = $0 }))
                     .keyboardShortcut("e")
                 Toggle("Frame Time", isOn: Binding(
-                    get: { choices.settings.showsFrameTime },
-                    set: { choices.settings.showsFrameTime = $0 }))
+                    get: { choices.basics.showsFrameTime },
+                    set: { choices.basics.showsFrameTime = $0 }))
                     .keyboardShortcut("t")
                 Picker("Quality", selection: Binding(
-                    get: { choices.settings.quality }, set: { choices.settings.quality = $0 })
+                    get: { choices.basics.quality }, set: { choices.basics.quality = $0 })
                 ) {
                     Text("Auto").tag(Quality.auto)
                     Divider()
@@ -99,12 +99,40 @@ final class Choices {
     private static let soundCheckKey = "ShowsSoundCheck"
     private static let controlsKey = "ShowsControls"
 
+    /// The settings, in two parts that are watched separately. The menus only read the
+    /// first, so they aren't rebuilt for every step of a slider being dragged: that
+    /// took the app's whole main thread (measured 2026-10-03).
+    ///
+    /// `basics` is everything but the person's changes to the controls, and `controls`
+    /// is those changes.
+    var basics: AcceleratorSettings {
+        didSet { if basics != oldValue { save() } }
+    }
+    var controls: ControlValues {
+        didSet { if controls != oldValue { save() } }
+    }
+
+    /// Both parts together, as the library takes them.
     var settings: AcceleratorSettings {
-        didSet {
-            guard settings != oldValue, let saved = try? JSONEncoder().encode(settings) else { return }
-            UserDefaults.standard.set(saved, forKey: Self.settingsKey)
+        get {
+            var whole = basics
+            whole.controls = controls
+            return whole
+        }
+        set {
+            var newBasics = newValue
+            newBasics.controls = ControlValues()
+            // Only what has changed is set, so only the views that read it are redrawn.
+            if newBasics != basics { basics = newBasics }
+            if newValue.controls != controls { controls = newValue.controls }
         }
     }
+
+    private func save() {
+        guard let saved = try? JSONEncoder().encode(settings) else { return }
+        UserDefaults.standard.set(saved, forKey: Self.settingsKey)
+    }
+
     /// Shows the plain bars and meters under the visual.
     var showsSoundCheck: Bool {
         didSet { UserDefaults.standard.set(showsSoundCheck, forKey: Self.soundCheckKey) }
@@ -116,8 +144,11 @@ final class Choices {
 
     init() {
         let saved = UserDefaults.standard.data(forKey: Self.settingsKey)
-        settings = saved.flatMap { try? JSONDecoder().decode(AcceleratorSettings.self, from: $0) }
+        var whole = saved.flatMap { try? JSONDecoder().decode(AcceleratorSettings.self, from: $0) }
             ?? AcceleratorSettings()
+        controls = whole.controls
+        whole.controls = ControlValues()
+        basics = whole
         showsSoundCheck = UserDefaults.standard.bool(forKey: Self.soundCheckKey)
         showsControls = UserDefaults.standard.bool(forKey: Self.controlsKey)
     }
@@ -139,7 +170,7 @@ private struct MainView: View {
                 if choices.showsSoundCheck {
                     // The bars sit under the visual in the same order and the same
                     // colours as its sections, so one reads against the other.
-                    SoundCheckView(listener: listener, controls: choices.settings.controls)
+                    SoundCheckView(listener: listener, controls: choices.controls)
                         .frame(height: 370)
                 }
             }

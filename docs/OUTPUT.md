@@ -84,7 +84,28 @@ Measuring the sound costs almost nothing beside a frame's 16.7 ms. The sound che
 
 The graphics card's time stayed at about 3 ms a frame throughout: the frames were lost on the processor. The sound check had been laying its whole view out afresh for every frame, words and all. Now the bars, meters and beat light are shapes drawn in one pass, and the words change four times a second.
 
-The stage still draws on the app's main thread, so heavy work elsewhere in the window can cost it a frame: the rate dips for a moment when Reset All redraws every control. Drawing on a thread of its own would end that, and is still to do.
+At that point the stage still drew on the app's main thread, so heavy work elsewhere in the window cost it frames. It now draws on a thread of its own.
+
+### The stage on a thread of its own
+
+**2019 iMac, 2026-10-03.** Two copies of the app were given the same scripted load, one drawing the stage on the main thread (as it was) and one on its own thread. Both showed the visual, the sound check and the controls, at High quality in a 1578×602 picture with the sample song playing. Each stretch lasted twelve seconds, and the first three of each were left out.
+
+| The window is… | Main thread: frames a second | longest wait between frames | Own thread: frames a second | longest wait |
+|---|---|---|---|---|
+| left alone | 59.7 | 63 ms | 60 | 17 ms |
+| having a slider dragged (a new value 30 times a second) | 20 | 118 ms | 60 | 17 ms |
+| the same, with the controls panel closing and opening twice a second | 24 | 265 ms | 60 | 19 ms |
+
+At 60 frames a second a frame comes every 16.7 ms, so a longest wait of 17 to 19 ms means none was missed.
+
+Dragging a slider was costing the main thread far more than it should, which matters for how the slider itself feels:
+
+| While a slider is dragged | One processor core |
+|---|---|
+| As first built | about 100% (the main thread had no time to spare) |
+| With the menus, the sound check and the colour pickers left alone unless they change | about 50% |
+
+In the app itself, with all three showing in a 2834×1300 picture: 60 frames a second with a longest wait of 17 ms, 20 frames a second three seconds after the song is paused, and under 1% of a core with the window minimised.
 
 ### Keeping the picture in time with the sound
 

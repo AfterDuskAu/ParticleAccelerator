@@ -47,6 +47,7 @@ public final class MusicListener {
         didSet {
             let allowed = min(0.5, max(-0.5, timingOffset))
             if allowed != timingOffset { timingOffset = allowed }
+            readings.setTimingOffset(allowed)
         }
     }
 
@@ -54,10 +55,14 @@ public final class MusicListener {
     /// read it when drawing rather than waiting to be told it changed.
     public var currentTime: TimeInterval { playback?.currentTime ?? 0 }
 
-    @ObservationIgnored private var feed: SoundFeed?
+    @ObservationIgnored private var feed: SoundFeed? {
+        didSet { readings.listen(to: feed) }
+    }
     /// The same feed, when it's a song file.
     @ObservationIgnored private var playback: SongFilePlayback?
-    @ObservationIgnored private var analyser: SoundAnalyser?
+    /// Measures what the feed hears. The stage asks it from a thread of its own, so
+    /// it's the one part of the listener that isn't kept to the main thread.
+    nonisolated let readings = Readings()
 
     public init() {}
 
@@ -173,7 +178,6 @@ public final class MusicListener {
         feed?.shutDown()
         feed = nil
         playback = nil
-        analyser = nil
         source = .nothing
         sourceName = nil
         problem = nil
@@ -184,16 +188,8 @@ public final class MusicListener {
 
     // MARK: For the visuals
 
-    /// What the music is doing right now. Call it once a frame, from the main thread.
-    func reading() -> SoundReading {
-        guard let feed else { return .silence }
-        let ring = feed.ring
-        if analyser?.ring !== ring {
-            analyser = SoundAnalyser(ring: ring)
-        }
-        guard let analyser else { return .silence }
-        let later = Int64((timingOffset * ring.sampleRate).rounded())
-        let reading = analyser.update(upTo: feed.heardUpTo - later)
-        return feed.isHeldStill ? reading.quieted : reading
+    /// What the music is doing right now. Call it once a frame, from any thread.
+    nonisolated func reading() -> SoundReading {
+        readings.reading()
     }
 }

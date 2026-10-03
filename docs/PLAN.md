@@ -62,7 +62,7 @@ Every visual comes with good settings, and the controls panel lets the owner cha
 
 ## The stage (what draws everything)
 
-- **One Metal view at the chosen frame rate.** It stops when hidden, and idles slowly in silence.
+- **One Metal view at the chosen frame rate,** drawn on a thread of its own so nothing else in the window can hold it up. It stops when hidden, and idles slowly in silence.
 - **The picture:**
   - drawn into a floating-point image
   - glow added

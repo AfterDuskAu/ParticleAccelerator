@@ -169,5 +169,19 @@ func swiftAndMetalAgreeOnWhereTheUniformsAre() throws {
     #expect(abs(summary.preparingMilliseconds - 0.5) < 0.001)
     #expect(abs(summary.graphicsCardMilliseconds - 6.05) < 0.01)
     #expect(abs(summary.slowestGraphicsCardMilliseconds - 12) < 0.001)
-    #expect(summary.text == "60 fps · graphics card 6.1 ms (slowest 12.0) · preparing 0.50 ms")
+    #expect(abs(summary.longestGapMilliseconds - 1_000.0 / 60) < 0.001)
+    #expect(summary.text == "60 fps (longest gap 17 ms) · graphics card 6.1 ms (slowest 12.0) · preparing 0.50 ms")
+}
+
+@Test func theFrameTimerShowsAMissedFrameThatTheAverageHides() {
+    // Two seconds at 60 frames a second, with one frame a twentieth of a second late.
+    let timer = FrameTimer()
+    var time = 0.0
+    for frame in 0..<120 {
+        time += frame == 60 ? 1.0 / 60 + 0.05 : 1.0 / 60
+        timer.frameBegan(at: time, preparingSeconds: 0.0005)
+    }
+    let summary = timer.summary
+    #expect(summary.framesPerSecond > 58)
+    #expect(abs(summary.longestGapMilliseconds - 66.7) < 0.1)
 }

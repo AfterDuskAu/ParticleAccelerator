@@ -10,22 +10,40 @@ import SwiftUI
 /// built on it. It stops drawing when its window can't be seen.
 public struct SoundCheckView: View {
     private let listener: MusicListener
-    /// The person's own colours for the bands, where they've picked any.
-    private let values: ControlValues
+    /// Each band's colour, sub first: the person's own where they've picked one.
+    private let colours: [SIMD3<Float>]
+
+    /// - Parameter controls: the person's own changes (`AcceleratorSettings.controls`),
+    ///   so the bars and meters are the same colours as the visual's sections.
+    public init(listener: MusicListener, controls: ControlValues = ControlValues()) {
+        self.listener = listener
+        colours = Band.allCases.map { controls.colour(of: $0) }
+    }
+
+    public var body: some View {
+        // Drawn again only when the listener or a colour changes. Without this it was
+        // laid out afresh for every step of a slider being dragged, though no slider
+        // changes anything in it (measured 2026-10-03).
+        SoundCheckContent(listener: listener, colours: colours)
+            .equatable()
+    }
+}
+
+/// The sound check itself.
+private struct SoundCheckContent: View, Equatable {
+    let listener: MusicListener
+    let colours: [SIMD3<Float>]
     @State private var meters = SoundCheckMeters()
     @State private var isWindowVisible: Bool = true
     /// Where the position slider is being dragged to, while it's being dragged.
     @State private var draggedTime: Double?
     @State private var problem: String?
 
-    /// - Parameter controls: the person's own changes (`AcceleratorSettings.controls`),
-    ///   so the bars and meters are the same colours as the visual's sections.
-    public init(listener: MusicListener, controls: ControlValues = ControlValues()) {
-        self.listener = listener
-        values = controls
+    static func == (one: SoundCheckContent, other: SoundCheckContent) -> Bool {
+        one.listener === other.listener && one.colours == other.colours
     }
 
-    public var body: some View {
+    var body: some View {
         // With a song file paused, a few frames a second is plenty to let the bars settle.
         let isLive = listener.isPlaying || (listener.source != .songFile && listener.source != .nothing)
         VStack(alignment: .leading, spacing: 16) {
@@ -132,7 +150,7 @@ public struct SoundCheckView: View {
         .help(listener.isMuted ? "Turn the sound back on" : "Mute: the bars still move")
         .accessibilityLabel(listener.isMuted ? "Unmute" : "Mute")
 
-        Text(Self.clock(time))
+        Text(SoundCheckView.clock(time))
             .monospacedDigit()
             .foregroundStyle(.secondary)
         Slider(
@@ -145,7 +163,7 @@ public struct SoundCheckView: View {
             }
         }
         .disabled(!hasSong)
-        Text(Self.clock(listener.duration))
+        Text(SoundCheckView.clock(listener.duration))
             .monospacedDigit()
             .foregroundStyle(.secondary)
     }
@@ -156,7 +174,7 @@ public struct SoundCheckView: View {
             get: { (listener.timingOffset * 1_000).rounded() },
             set: { listener.timingOffset = $0 / 1_000 })
         return Stepper(value: thousandths, in: -500...500, step: 10) {
-            Text("Timing \(Self.signed(Int(thousandths.wrappedValue))) ms")
+            Text("Timing \(SoundCheckView.signed(Int(thousandths.wrappedValue))) ms")
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
         }
@@ -183,8 +201,16 @@ public struct SoundCheckView: View {
         }
     }
 
-    // MARK: Words and colours
+    /// The band's colour, the same one its section of Visualizer 3 has.
+    private func colour(of band: Band) -> Color {
+        let colour = colours[band.rawValue]
+        return Color(.sRGB, red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
+    }
+}
 
+// MARK: - Words
+
+extension SoundCheckView {
     /// 20 as "+20", -30 as "−30" and 0 as "0".
     static func signed(_ number: Int) -> String {
         number > 0 ? "+\(number)" : number < 0 ? "−\(-number)" : "0"
@@ -213,12 +239,6 @@ public struct SoundCheckView: View {
             return "\(Int(low)) Hz–\(Int(high / 1_000)) kHz"
         }
         return "\(Int(low))–\(Int(high)) Hz"
-    }
-
-    /// The band's colour, the same one its section of Visualizer 3 has.
-    private func colour(of band: Band) -> Color {
-        let colour = values.colour(of: band)
-        return Color(.sRGB, red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
     }
 }
 

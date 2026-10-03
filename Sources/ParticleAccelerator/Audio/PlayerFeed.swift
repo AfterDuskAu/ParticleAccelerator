@@ -1,6 +1,7 @@
 import AVFoundation
 import AtomicIntegers
 import MediaToolbox
+import os
 
 /// Hears a host app's `AVPlayer`: whatever it plays now and whatever it plays next.
 ///
@@ -11,7 +12,13 @@ import MediaToolbox
 /// Measured on 2026-10-03:
 /// - The tap is handed the sound in blocks of about a twentieth of a second, almost
 ///   half a second before the speakers play it. So each block's place in the song is
-///   kept, and `heardUpTo` follows the player's own clock.
+///   kept, and what's been heard follows the playing item's own clock.
+/// - That clock (the item's "timebase") agrees with the player's `currentTime()` to
+///   within a millisecond while it plays, and unlike the player it may be read from
+///   any thread. It runs at no speed while the player is paused or waiting.
+/// - For about a quarter of a second after the player starts or seeks, the clock runs
+///   up to the starting place from just before it, while `currentTime()` waits at the
+///   starting place. Nothing is heard in that time, by either reckoning.
 /// - A player turned down to nothing (`volume = 0`) is still heard. A player muted
 ///   with `isMuted` is heard for about four seconds, and then macOS hands the tap
 ///   silence for as long as it stays muted.
@@ -19,7 +26,7 @@ import MediaToolbox
 /// It works for files and for streams with a sound track of their own. A stream whose
 /// sound can't be reached (HLS) gives a plain message through `onProblem`.
 ///
-/// Use it from the main thread only.
+/// Use it from the main thread only, except for `heard`.
 final class PlayerFeed: SoundFeed {
     /// Called with a plain-English message when an item's sound can't be heard, and
     /// with nil when the next one can.
@@ -27,10 +34,20 @@ final class PlayerFeed: SoundFeed {
 
     private let player: AVPlayer
     private var itemWatch: NSKeyValueObservation?
+    private var clockWatch: NSKeyValueObservation?
     private var attachment: Attachment?
     private var isShutDown = false
     /// Stands in until the first item's sound arrives.
     private let emptyRing = SampleRing(sampleRate: 44_100)
+    /// What `heard` needs from the item being listened to. The stage's thread reads it
+    /// while the main thread may be changing it (the next song).
+    private let heardFrom = OSAllocatedUnfairLock<HeardFrom?>(uncheckedState: nil)
+
+    private struct HeardFrom {
+        let context: PlayerTapContext
+        /// The item's own clock, or nil if it hasn't one yet.
+        var clock: CMTimebase?
+    }
 
     private struct Attachment {
         let item: AVPlayerItem
@@ -48,17 +65,25 @@ final class PlayerFeed: SoundFeed {
         currentItemChanged()
     }
 
-    var ring: SampleRing { attachment?.context.ring ?? emptyRing }
-
-    var heardUpTo: Int64 {
-        guard let context = attachment?.context, let ring = context.ring else { return 0 }
-        let offset = context.timeOffset
-        let now = player.currentTime().seconds
-        guard offset.isFinite, now.isFinite else { return 0 }
-        return Int64(((now - offset) * ring.sampleRate).rounded())
+    func heard() -> Heard {
+        guard let from = heardFrom.withLockUnchecked({ $0 }) else {
+            return Heard(ring: emptyRing, upTo: 0, isHeldStill: true)
+        }
+        let ownRing = from.context.ring
+        guard let clock = from.clock else {
+            return Heard(ring: ownRing ?? emptyRing, upTo: 0, isHeldStill: true)
+        }
+        // The clock runs at no speed while the player is paused or waiting for more
+        // of a stream.
+        let isHeldStill = CMTimebaseGetRate(clock) == 0
+        let offset = from.context.timeOffset
+        let now = CMTimebaseGetTime(clock).seconds
+        guard let ring = ownRing, offset.isFinite, now.isFinite else {
+            return Heard(ring: ownRing ?? emptyRing, upTo: 0, isHeldStill: isHeldStill)
+        }
+        return Heard(
+            ring: ring, upTo: Int64(((now - offset) * ring.sampleRate).rounded()), isHeldStill: isHeldStill)
     }
-
-    var isHeldStill: Bool { player.timeControlStatus != .playing }
 
     /// Where the ring's samples sit in the song: a sample's time in the song is its
     /// number ÷ the sample rate + this many seconds. Nil until the first sound arrives.
@@ -131,7 +156,22 @@ final class PlayerFeed: SoundFeed {
         mix.inputParameters = others + [parameters]
         item.audioMix = mix
         attachment = Attachment(item: item, tap: tap, context: context, mixBefore: mixBefore)
+        let from = HeardFrom(context: context, clock: item.timebase)
+        heardFrom.withLockUnchecked { $0 = from }
+        if from.clock == nil {
+            // An item has had its clock from the moment it was made whenever this was
+            // tried (2026-10-03). If one ever hasn't, take it when the item is ready.
+            clockWatch = item.observe(\.status) { [weak self] item, _ in
+                DispatchQueue.main.async { self?.takeClock(of: item) }
+            }
+        }
         onProblem?(nil)
+    }
+
+    private func takeClock(of item: AVPlayerItem) {
+        guard attachment?.item === item, let clock = item.timebase else { return }
+        clockWatch = nil
+        heardFrom.withLockUnchecked { $0?.clock = clock }
     }
 
     /// Takes the tap off again, unless the host has changed the item's sound settings
@@ -139,6 +179,8 @@ final class PlayerFeed: SoundFeed {
     private func detach() {
         guard let attachment else { return }
         self.attachment = nil
+        clockWatch = nil
+        heardFrom.withLockUnchecked { $0 = nil }
         let stillOurs = attachment.item.audioMix?.inputParameters.contains {
             $0.audioTapProcessor === attachment.tap
         }

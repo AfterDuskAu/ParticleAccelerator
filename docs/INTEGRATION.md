@@ -63,6 +63,7 @@ Optional extras for a host that wants its own menus:
 - **It never changes the sound.** It adds a listening tap to the player's current item, and removes it when listening stops. The host's playback, volume and seeking are untouched, and any sound settings the host put on the item (an `audioMix`) are kept and put back.
 - **It writes no files and uses no network.**
 - **It costs nothing when hidden.** Drawing stops when the view isn't on screen, and listening stops when it's gone.
+- **It keeps out of the host's way, and the host out of its.** Frames are drawn on a thread of the library's own. A busy host window doesn't cost the visual frames, and the visual takes nothing from the host's main thread but a few settings changes.
 - **It needs only macOS 14 and Apple's frameworks.** No other packages come with it.
 - **No surprises:** a change to anything `public` gets a new version number and a note at the bottom of this file. Hosts pin a version (`from: "1.0.0"`), so an update never arrives by itself.
 

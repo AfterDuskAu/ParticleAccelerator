@@ -256,3 +256,37 @@ What was added:
 - **Dragging a slider wasn't checked by hand.** The sliders were moved by clicking on their tracks, and the picture followed. The owner's own dragging is the real check.
 - **No presets yet:** there's one set of changes, kept with the app's settings.
 
+### The stage draws on a thread of its own
+
+2026-10-03. The controls panel showed that the stage, drawing on the app's main thread, lost frames whenever the rest of the window was busy. `CLAUDE.md` rule 6 says nothing should make the drawing wait on the main thread. The owner asked for it to be fixed.
+
+- **The stage's own thread** (`StageThread`). The screen's frame clock wakes it for each frame, and the view hands it everything else: new settings, a new size, a new quality. The view itself stays on the main thread, like every view.
+- **The view is a plain view with a Metal layer.** It was an `MTKView`, which wants to be drawn from the main thread.
+- **Readings can be asked for from any thread** (`Readings`). The stage's thread and the sound check both ask, and take turns: the analyser can only be worked by one thread at a time. A turn is about a hundredth of a millisecond.
+- **Each feed says what it has heard in one answer** (`SoundFeed.heard`), safe to ask from any thread.
+- **A host's player is followed by its item's own clock.** An `AVPlayer` isn't safe to ask from another thread; the playing item's clock (its "timebase") is. Measured: the two agree to within a millisecond while it plays, and the clock runs at no speed while the player is paused or waiting.
+- **The frame-time line shows the longest wait between frames** as well as the average: "60 fps (longest gap 17 ms)". A missed frame shows there even when the average hides it.
+- **A slider drag costs the rest of the window half as much.** Every step of a drag was rebuilding the app's menus and laying the sound check and the colour pickers out again, though none of them had changed. That took the main thread's whole time. They're now left alone unless something they show changes.
+- **Tests:** 140. New ones cover the stage's thread (work runs there, in order, and it ends when told), how often it draws, readings asked for from three threads at once (the result is exactly what one thread arrives at), and a player's place and pause asked from another thread.
+
+**Measured on the iMac (2026-10-03),** two copies of the app under the same scripted load, High quality, the sample song:
+
+| The window is… | Before: frames a second | longest wait between frames | After: frames a second | longest wait |
+|---|---|---|---|---|
+| left alone | 59.7 | 63 ms | 60 | 17 ms |
+| having a slider dragged (a new value 30 times a second) | 20 | 118 ms | 60 | 17 ms |
+| the same, with the controls panel closing and opening twice a second | 24 | 265 ms | 60 | 19 ms |
+
+- **In the app:** 60 frames a second with a longest wait of 17 ms, with the visual, the sound check and the controls all showing in a 2834×1300 picture. Changing the quality, hiding the sound check and pausing the song were each tried: the picture followed, it idled at 20 frames a second three seconds after the pause, and it came back to 60 on play.
+- **Minimised, with the song playing:** under 1% of a processor core. Drawing still stops when the window can't be seen.
+
+**Changes from the plan, and why:**
+
+- **The item's clock, not the player's.** For about a quarter of a second after a player starts or seeks, the item's clock runs up to the starting place from just before it, while the player's own time waits at the starting place. Nothing is heard in that time by either reckoning, so the visuals are the same. A player that's paused now reads as quiet a moment after it says it has paused, not at the same instant. Two tests were changed to wait for those moments.
+- **The thread sanitizer** (a tool that catches two threads touching the same thing unsafely) was run over the new tests and reported nothing in the new code. It does report the sample ring and the player's tap, the two places from phase 1 where the audio thread hands sound over without a lock. Those are as they were and weren't looked into here.
+
+**Known limits:**
+
+- **Dragging a slider by hand** still hasn't been timed, only the scripted stand-in for it.
+- **The player tests fail when the Mac is very busy** with other work (two other projects were compiling during some runs). They pass alone and when the Mac is quiet, three times out of three each. That was true before this change too.
+

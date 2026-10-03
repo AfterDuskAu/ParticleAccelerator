@@ -22,7 +22,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 5. **It scales.** Every visual has quality controls (particle count, drawing size, effects). It must hold 60 fps on the iMac at High quality, measured with the frame-time counter, and grow to use a Mac Studio's power (`docs/OUTPUT.md`). Auto quality picks a tier and adapts.
 6. **Real-time safety.**
    - Nothing on the audio thread allocates memory, takes a lock, calls Swift concurrency or logs.
-   - Nothing makes the drawing wait on the main thread.
+   - Nothing makes the drawing wait on the main thread. The stage draws on a thread of its own, and whatever it asks for each frame (`SoundFeed.heard`, `Readings`) is safe to ask from there. A host's `AVPlayer` isn't, so its place is read from the playing item's own clock.
    - Drawing stops when the view is hidden.
 7. **Shaders are Metal source kept as text in Swift files, compiled when the stage starts.** `swift build` doesn't compile `.metal` files (checked 2026-10-03), and the app bundle has no resource folder. A test compiles every shader.
 8. **Flashing is limited.** Whole-screen flashes happen at most 3 times a second, on by default, for people sensitive to flashing light. A setting turns the limit off.
@@ -32,7 +32,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 
 - `Sources/ParticleAccelerator/`: the library (`import ParticleAccelerator`). Planned parts:
   - `Audio/`: audio sources (a file, the Mac's own sound, a microphone, a host's `AVPlayer`), the analyser and beats, and the four-step signal chain
-  - `Stage/`: the Metal renderer, particles, the camera, glow, quality tiers and Auto
+  - `Stage/`: the Metal renderer, the stage's own thread, particles, the camera, glow, quality tiers and Auto
   - `Visuals/`: one file per visual
   - `Settings/`: `Codable` settings and presets, each visual's list of controls, and the controls panel
 - `Sources/AtomicIntegers/`: a few lines of C, so the audio thread and the analyser can share a count without a lock (Swift's own atomics need macOS 15).

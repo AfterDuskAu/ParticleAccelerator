@@ -1,5 +1,6 @@
 import AVFoundation
 import AudioToolbox
+import os
 
 /// Something that stopped the music being heard, said so a person can act on it.
 struct ListeningProblem: LocalizedError, Equatable {
@@ -19,18 +20,13 @@ struct ListeningProblem: LocalizedError, Equatable {
 /// AVAudioEngine's own tap only delivers every tenth of a second, far too jerky to draw
 /// from.
 ///
-/// Use it from the main thread only.
+/// Use it from the main thread only, except for `heard`.
 final class SongFilePlayback: SoundFeed {
     let title: String
     let duration: TimeInterval
     private(set) var isPlaying = false
     /// The sound being played, for the analyser.
     let ring: SampleRing
-    /// The sound is copied as it's handed to the speakers, a moment before it comes
-    /// out of them.
-    var heardUpTo: Int64 { ring.totalWritten - delaySamples }
-    /// When the song is paused, silence flows through by itself.
-    var isHeldStill: Bool { false }
     /// Whether the speakers are silenced. The analyser hears the song either way.
     var isMuted = false {
         didSet { applyMute() }
@@ -50,7 +46,8 @@ final class SongFilePlayback: SoundFeed {
     private var isConnected = false
     private var isCopying = false
     /// How long the Mac's output takes to play a sample, in the song's own samples.
-    private var delaySamples: Int64 = 0
+    /// The stage's thread reads it while the main thread may be changing it.
+    private let delaySamples = OSAllocatedUnfairLock(initialState: Int64(0))
     /// Where in the file the part now scheduled on the player begins.
     private var startFrame: AVAudioFramePosition = 0
     private var isScheduled = false
@@ -86,6 +83,13 @@ final class SongFilePlayback: SoundFeed {
         shutDown()
     }
 
+    /// The sound is copied as it's handed to the speakers, a moment before it comes
+    /// out of them. When the song is paused, silence flows through by itself, so it's
+    /// never held still.
+    func heard() -> Heard {
+        Heard(ring: ring, upTo: ring.totalWritten - delaySamples.withLock { $0 }, isHeldStill: false)
+    }
+
     /// Where the song is, in seconds.
     var currentTime: TimeInterval {
         guard isPlaying else { return heldTime }
@@ -115,7 +119,8 @@ final class SongFilePlayback: SoundFeed {
         if !isScheduled {
             scheduleFile(from: startFrame)
         }
-        delaySamples = Int64(SoundDevices.outputDelaySeconds() * fileRate)
+        let delay = Int64(SoundDevices.outputDelaySeconds() * fileRate)
+        delaySamples.withLock { $0 = delay }
         player.play()
         playBeganAt = ProcessInfo.processInfo.systemUptime
         isPlaying = true

@@ -9,18 +9,22 @@ final class FrameTimer: @unchecked Sendable {
     struct Summary: Equatable {
         /// Frames shown each second.
         var framesPerSecond: Double = 0
+        /// The longest wait between one frame and the next, lately. At 60 frames a
+        /// second a frame comes every 16.7 ms, so anything much over that is a frame
+        /// that was missed, which the average alone can hide.
+        var longestGapMilliseconds: Double = 0
         /// The graphics card's time for a frame: the average, and the slowest lately.
         var graphicsCardMilliseconds: Double = 0
         var slowestGraphicsCardMilliseconds: Double = 0
         /// The processor's time getting a frame ready.
         var preparingMilliseconds: Double = 0
 
-        /// "60 fps · graphics card 6.1 ms (slowest 7.4) · preparing 0.3 ms"
+        /// "60 fps (longest gap 17 ms) · graphics card 6.1 ms (slowest 7.4) · preparing 0.30 ms"
         var text: String {
             String(
-                format: "%.0f fps · graphics card %.1f ms (slowest %.1f) · preparing %.2f ms",
-                framesPerSecond, graphicsCardMilliseconds, slowestGraphicsCardMilliseconds,
-                preparingMilliseconds)
+                format: "%.0f fps (longest gap %.0f ms) · graphics card %.1f ms (slowest %.1f) · preparing %.2f ms",
+                framesPerSecond, longestGapMilliseconds, graphicsCardMilliseconds,
+                slowestGraphicsCardMilliseconds, preparingMilliseconds)
         }
     }
 
@@ -53,6 +57,8 @@ final class FrameTimer: @unchecked Sendable {
         var summary = Summary()
         if let first = frameTimes.first, let last = frameTimes.last, last > first {
             summary.framesPerSecond = Double(frameTimes.count - 1) / (last - first)
+            let longestGap = zip(frameTimes.dropFirst(), frameTimes).map { $0 - $1 }.max() ?? 0
+            summary.longestGapMilliseconds = longestGap * 1_000
         }
         if !graphicsCard.isEmpty {
             summary.graphicsCardMilliseconds = graphicsCard.reduce(0, +) / Double(graphicsCard.count) * 1_000
