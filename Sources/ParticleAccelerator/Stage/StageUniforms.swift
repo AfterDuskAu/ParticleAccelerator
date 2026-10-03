@@ -40,11 +40,12 @@ struct StageUniforms {
     /// each band, sub first (eight numbers spare at the end).
     var bandLight = SIMD32<Float>(repeating: 0)
 
-    /// Fills in `bandLight` from the bands' colours, the person's own where they've
-    /// picked one.
-    mutating func setBandLight(from values: ControlValues) {
+    /// Fills in `bandLight` from the bands' colours at this moment: the person's own
+    /// where they've picked one, or the made-up ones if they change by themselves.
+    mutating func setBandLight(from values: ControlValues, at time: Double) {
+        let colours = BandPalette(values).colours(at: time)
         for band in Band.allCases {
-            let light = Band.light(of: values.colour(of: band))
+            let light = Band.light(of: colours[band.rawValue])
             bandLight[band.rawValue * 4] = light.x
             bandLight[band.rawValue * 4 + 1] = light.y
             bandLight[band.rawValue * 4 + 2] = light.z

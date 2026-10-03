@@ -9,9 +9,17 @@ The pictures are references only. Each visual is drawn by code in the same style
 | 1 | Ring & Ink | very close | ★★ | planned |
 | 2 | Iron Maw | a stylised version | ★★★★★ | planned |
 | 3 | Particle Wave | close in shape; the colours are ours | ★★ | second version built 2026-10-03, after the owner's first notes; waiting for their notes on it |
-| 4 | Tendrils | close in motion | ★★★★ | planned |
-| 5 | Fountain | very close | ★ | planned |
-| 6 | Starburst | close | ★★★ | planned; picture still to be saved in `references/` |
+| 4 | Tendrils | close in motion; the colours are ours | ★★★★ | base design built 2026-10-04; for the owner to tune |
+| 5 | Fountain | very close | ★ | base design built 2026-10-04; for the owner to tune |
+| 6 | Starburst | close | ★★★ | base design built 2026-10-04, from the card alone (the picture still isn't in `references/`); for the owner to tune |
+
+**A base design** is a first version with every setting on a slider (View → Controls), built so the owner can shape it themselves. It isn't marked built until they're happy with it.
+
+**In every visual with particles:**
+
+- **Each band has its colour,** the same six everywhere, and the owner can pick their own or have them change by themselves (below).
+- **Sparks are drawn the way a camera sees them** (2026-10-04, after the owner asked for "more realistic, more high def"): a hot core with a soft skirt, drawn out into a short streak when it's moving fast, and an even disc when it's out of focus.
+- **Colours that change by themselves** (2026-10-04): switched on, the six colours drift slowly from one made-up set to the next and never settle. The sets are six hues spread round the colour wheel, so neighbouring bands always stay apart.
 
 ## 1. Ring & Ink ★★
 
@@ -59,6 +67,7 @@ The pictures are references only. Each visual is drawn by code in the same style
   - **Line:** thickness, brightness, haze, kick ripple, tremble.
   - **Picture:** glow, brightness, dark corners.
   - **Colours:** one for each band.
+  - Added 2026-10-04: **Bars** (how many bars of the spectrum the peaks are made from, 8 to 64) and **Streaks**.
 
 ## 4. Tendrils ★★★★
 
@@ -68,6 +77,15 @@ The pictures are references only. Each visual is drawn by code in the same style
 - **With the music:** the strands flow outward and curl like smoke in a slow current. Bass pushes them out faster and swells the hole, highs send sparkles running along them, and the whole field turns slowly. The song's cover can sit in the hole.
 - **How close:** close in motion. The picture's hair-fine detail comes from a slow offline render; ours comes near it with trails, and closer still on faster Macs, which can afford more strands.
 - **Needs:** a flow field ("curl noise") and trails (each frame fades a little instead of being cleared).
+- **As built (base design, 2026-10-04):**
+  - **A strand is a file of sparks** following each other out from one place on the hole's rim. Each frame the last picture is dimmed a little and the sparks drawn on top, so each leaves a short trail and the file joins into a line.
+  - **The current** that bends them is a few broad waves crossing each other, slowly changing. It bends the strands without bunching them, the way smoke moves.
+  - **Each strand is a band's colour.** The bands take turns round the hole, three sprays each, and a spray surges outward and brightens with its band. The picture's own blue and pink can be had by picking those colours.
+  - **The bass** pushes every strand out faster, and the hole swells on each kick.
+  - Some strands are bright and most are faint, so the brighter ones stand out as separate lines. About one spark in thirty is a bright speck that twinkles with the highs.
+  - The camera moves less than in the other visuals: the trails stay where the picture was, so a moving camera smears them.
+  - The cover in the hole waits for the visuals that use artwork.
+- **Its controls:** Flow (speed, bass push, curl, curl size, turning, hole size), Strands (how many, trail, thickness, brightness, specks, twinkle), Movement, Picture, Colours.
 
 ## 5. Fountain ★
 
@@ -77,6 +95,12 @@ The pictures are references only. Each visual is drawn by code in the same style
 - **With the music:** the spray's height and amount follow loudness, and each kick throws a burst. Highs make the sparks twinkle, and the glow on the floor pulses.
 - **How close:** very close.
 - **Needs:** a particle emitter.
+- **As built (base design, 2026-10-04):**
+  - Sparks wait at the mouth and are thrown up: a trickle in silence, most of them when it's loud, and a burst on each kick. The louder the song, the faster they leave, so the higher the spray.
+  - Each leaves white-hot and takes its colour on the way up. Gravity and the air slow it, and it fades before it lands.
+  - **Each spark is a band's colour.** The stronger a band is as a spark is thrown, the more of the sparks are its colour, so the spray's colours show what's playing.
+  - A glow lies on the floor and stands at the mouth, and both pulse with the loudness and the kick.
+- **Its controls:** Spray (height, spread, amount, kick burst, gravity, life), Sparks (size, brightness, twinkle, white heat, streaks), Floor glow, Movement, Picture, Colours.
 
 ## 6. Starburst ★★★
 
@@ -86,3 +110,11 @@ The pictures are references only. Each visual is drawn by code in the same style
 - **With the music:** kicks fire new bursts, and loudness sets their speed and how many streams there are. The camera drifts slowly into the burst, and near sparks go out of focus.
 - **How close:** close.
 - **Needs:** a 3D camera with depth of field (blur by distance), and bursts.
+- **As built (base design, 2026-10-04):**
+  - Each kick fires a burst, and the last four are in the air together. A stream is a head with a trail of sparks following it out, fast at first and slowing.
+  - **Each stream belongs to a band** and is a pale shade of its colour (Whiteness sets how pale; at 100% it's the picture's own lavender-white). The stronger the band, the further its streams reach.
+  - The louder the song, the faster the streams and the more of them fire.
+  - Between kicks a thin field of sparks drifts outward, faster when it's loud, so the picture is never empty.
+  - Sparks flying towards the camera go out of focus into soft discs.
+  - Nothing is kept from frame to frame: where a spark is follows from its number and how long ago its kick landed.
+- **Its controls:** Burst (streams, reach, speed, trail, spread, drift between kicks, turning), Sparks (size, brightness, twinkle, whiteness, heads, blur, streaks), Movement, Picture, Colours.

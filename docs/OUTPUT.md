@@ -45,18 +45,33 @@ Suggested: **High at 60 fps**, Medium at 120 fps. The particle count matters far
 
 To add: a Mac Studio, an Apple Silicon laptop. Run `pa-bench` on it and add its table here.
 
-### Visualizer 3 (Particle Wave)
+### The visuals
 
-**2019 iMac, 2026-10-03.** The graphics card's time for a whole frame (sparks moved and drawn, glow, finishing), in a release build, each tier at its full size. Measured again after the second version (a colour for each band, quicker sparks):
+**2019 iMac, 2026-10-04.** The graphics card's time for a whole frame (sparks moved and drawn, glow, finishing), in a release build, each tier at its full size, in the busiest eight seconds of a busy song:
 
-| Tier | Sparks | Picture | Per frame, first version | Per frame, second version |
+| Tier | Sparks | Picture | 3 Particle Wave | 4 Tendrils | 5 Fountain | 6 Starburst |
+|---|---|---|---|---|---|---|
+| Low | 75,000 | 1280×720 | 0.7 ms | 0.7 ms | 0.7 ms | 0.5 ms |
+| Medium | 150,000 | 1920×1080 | 1.6 ms | 2.5 ms | 1.8 ms | 1.5 ms |
+| High | 300,000 | 2560×1440 | 4.5 ms (slowest 11.8) | 7.0 ms (slowest 7.4) | 4.7 ms (slowest 5.5) | 4.5 ms (slowest 5.6) |
+| Ultra | 1,000,000 | 3840×2160 | 30.1 ms | 35.5 ms | 27.7 ms | 22.9 ms |
+
+High holds 60 fps on the iMac for all four (a frame allows 16.7 ms). Ultra needs a faster Mac.
+
+**Earlier measurements of Visualizer 3,** High: 3.9 ms in its first version and 3.6 ms in its second (2026-10-03), before sparks were drawn with cores, streaks and blur discs. The new sparks cost about a millisecond.
+
+**Could High draw a 4K picture on this iMac?** Measured with High's 300,000 sparks:
+
+| Picture | 3 Particle Wave | 4 Tendrils | 5 Fountain | 6 Starburst |
 |---|---|---|---|---|
-| Low | 75,000 | 1280×720 | 0.7 ms | 0.7 ms |
-| Medium | 150,000 | 1920×1080 | 1.6 ms | 1.5 ms |
-| High | 300,000 | 2560×1440 | 3.9 ms (slowest 6.1) | 3.6 ms (slowest 8.3) |
-| Ultra | 1,000,000 | 3840×2160 | 26.2 ms | 22.2 ms |
+| 3840×2160 | 10.4 ms (slowest 25.7) | 12.8 ms (slowest 13.8) | 9.9 ms (slowest 11.1) | 8.1 ms (slowest 10.2) |
+| 5120×2880 | 16.8 ms | 18.5 ms | 16.8 ms | 13.7 ms |
 
-High holds 60 fps on the iMac with room to spare. Ultra needs a faster Mac. The processor's share of a frame is about 0.2 ms, and the app uses about 4% of one core while the visual shows.
+Three of the four would hold 60 fps at 4K; Visualizer 3's busiest frames wouldn't. So High stays at 2560×1440, which the 5K screen doubles exactly in full screen. In a window the picture is already drawn at the window's own pixels. A sharper setting for the visuals that can afford it belongs with Auto quality.
+
+**How a spark is drawn** was measured two ways (Visualizer 3, High): as one square of pixels with its shape worked out inside, 4.5 ms; as a four-cornered patch lying along its streak, which wastes no pixels, 7.4 ms. Drawing four corners for every spark costs more than the pixels saved, so it's one square, and streaks are kept short (at most 2% of the picture's height).
+
+**Flashing** (the biggest swing in the whole picture's brightness within a third of a second, where 10% or more counts as a flash): Visualizer 3, 8%; Tendrils, 3%; Fountain, 3%; Starburst, 4%.
 
 ### Hearing the music
 

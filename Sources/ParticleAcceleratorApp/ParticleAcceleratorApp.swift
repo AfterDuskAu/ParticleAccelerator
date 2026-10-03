@@ -36,6 +36,13 @@ struct ParticleAcceleratorApp: App {
                     get: { choices.basics.showsFrameTime },
                     set: { choices.basics.showsFrameTime = $0 }))
                     .keyboardShortcut("t")
+                Picker("Visualizer", selection: Binding(
+                    get: { choices.basics.visual }, set: { choices.basics.visual = $0 })
+                ) {
+                    ForEach(Visuals.all.filter(\.canBeShown)) { visual in
+                        Text(visual.title).tag(visual.number)
+                    }
+                }
                 Picker("Quality", selection: Binding(
                     get: { choices.basics.quality }, set: { choices.basics.quality = $0 })
                 ) {

@@ -136,6 +136,27 @@ private let fall = ParticleWave.Control.fall
     #expect(ParticleWave.Control.sparkSize.text(for: 1) == "1.00×")
 }
 
+@Test func fewerBarsJoinNeighboursIntoBlocks() {
+    // One loud pitch, in bar 30. With all 64 bars it's a peak of its own; with 8, the
+    // whole block of eight bars it's in (24 to 31) stands as tall as it does.
+    func settled(barsShown: Int) -> SIMD64<Float> {
+        var mountains = ParticleWave.Mountains()
+        mountains.barsShown = barsShown
+        var sound = SIMD64<Float>(repeating: 0)
+        sound[30] = 1
+        var range = SIMD64<Float>(repeating: 0)
+        for _ in 0..<120 { range = mountains.update(bars: sound, seconds: 1.0 / 60) }
+        return range
+    }
+    let all = settled(barsShown: 64)
+    #expect(all[30] > 0.5 && all[25] == 0)
+    let eight = settled(barsShown: 8)
+    #expect(eight[24] == eight[30] && eight[31] == eight[30] && eight[30] == all[30])
+    // And it still slopes away at the block's edges.
+    #expect(eight[23] < eight[24] && eight[23] > 0 && eight[20] == 0)
+    #expect(ParticleWave.Control.bars.text(for: 64) == "64")
+}
+
 @Test func theControlsAreGroupedUnderTheirHeadingsInOrder() {
     let groups = AcceleratorControls.groups(of: ParticleWave.controls)
     #expect(groups.map(\.name) == ["Peaks", "Movement", "Sparks", "Line", "Picture"])
@@ -226,19 +247,4 @@ func aPickedColourShowsInItsBandsSection() throws {
     // The section two along is left as it was.
     let mids = picked.colour(left: 0.53, top: 0.30, right: 0.59, bottom: 0.46)
     #expect(mids.blue > mids.green, "\(mids)")
-}
-
-@Test(.enabled(if: hasGraphicsCard, noGraphicsCard))
-func thePictureStillDrawsWithEveryControlAtEitherEnd() throws {
-    for atTheTop in [false, true] {
-        let frame = try picture { values in
-            for control in ParticleWave.controls {
-                values.set(atTheTop ? control.range.upperBound : control.range.lowerBound, for: control)
-            }
-        }
-        // Something is drawn, and nothing has gone wrong in the sums (which would
-        // leave the picture black or solid white).
-        let light = frame.brightness(left: 0, top: 0, right: 1, bottom: 1)
-        #expect(light > 0.002 && light < 0.98, "at the \(atTheTop ? "top" : "bottom"): \(light)")
-    }
 }

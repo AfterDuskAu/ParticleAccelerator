@@ -290,3 +290,76 @@ What was added:
 - **Dragging a slider by hand** still hasn't been timed, only the scripted stand-in for it.
 - **The player tests fail when the Mac is very busy** with other work (two other projects were compiling during some runs). They pass alone and when the Mac is quiet, three times out of three each. That was true before this change too.
 
+### Three more visuals as base designs, colours that change, and sparks as a camera sees them
+
+2026-10-04. The owner asked four things:
+
+- How many bars can be measured, and can there be a minimum and a maximum?
+- "Add as many base designs that have to do with particles", from the pictures they'd sent.
+- Colours that are made up at random and slowly change to new ones, instead of staying fixed.
+- Whether the particles can look "more realistic, more high def, more 4K".
+
+**Three more visuals,** each a base design with all its settings on sliders, for the owner to shape:
+
+- **Visualizer 5, Fountain:** a white-hot jet from the floor, widening into a spray of coloured sparks, with a glow on the floor. The louder the song the higher it goes, and each kick throws a burst.
+- **Visualizer 6, Starburst:** each kick fires a burst of streams from the centre, each a bright head with a trail behind it. Sparks coming towards the camera blur into discs.
+- **Visualizer 4, Tendrils:** fine strands pour out from a dark hole and curl in a slow current, with bright specks running along them. The bass pushes them out and swells the hole.
+- In all three, each band has its colour, as in Visualizer 3 (`VISUALS.md` says how each uses them).
+- Visualizers 1 and 2 aren't made of particles, and wait their turn.
+- **Choosing between them:** View → Visualizer, or the menu at the top of the controls panel.
+
+**Colours that change by themselves** (the Colours part of the controls panel):
+
+- Switched on, the six colours drift from one made-up set to the next, and never settle. "A new set every" says how long each drift takes (4 seconds to 2 minutes; 20 to start with).
+- A made-up set is six hues spread round the colour wheel a fixed step apart, so neighbouring bands always stay clearly different. That keeps what the owner asked for on 2026-10-03: the visual separated into colours.
+- The sound check's bars and meters follow the same colours, so it still works as a key.
+- A person's own picked colours wait while this is on, and come back when it's switched off.
+
+**Sparks as a camera sees them,** in all four visuals:
+
+- A hot core with a soft skirt, where they were soft blobs.
+- A short streak on a spark that's moving fast (Streaks, in each visual's controls; at 0 every spark is a dot).
+- An even disc, a little brighter at its rim, on a spark that's out of focus.
+- **"More 4K":** in a window the picture is already drawn at the window's own pixels. In full screen on the 5K screen, High draws 2560×1440 and the screen doubles it. Drawing 4K at High was measured: three of the four visuals would hold 60 fps on the iMac, and Visualizer 3's busiest frames wouldn't, so the tiers stay as they are for now (`OUTPUT.md`).
+
+**Bars:**
+
+- The music is measured in 64 bars, from 30 Hz to 16,000 Hz. Behind them are 742 separate readings, each about 21 Hz wide.
+- There are plenty of readings in the highs and few in the bass: from 30 to 150 Hz there are only six. So about the lowest 20 of the 64 bars are already read between neighbouring readings. More bars would add detail from the middle up only: of 128 bars about 54 would be read between readings, and of 256 more than half.
+- Visualizer 3 has a new control, Bars, from 8 to 64. Fewer joins neighbours into broad blocks.
+- More than 64 needs the analyser and the shaders changing in several places, and hasn't been done.
+
+**Inside:**
+
+- The parts every visual needs are shared: the camera and picture controls (`CommonControls`), the last four kicks (`KickClock`), the spark drawing (`makeSpark`, `sparkLight`), and the bands' colours of the moment (`BandPalette`).
+- Tendrils keeps its trails in the picture itself: each frame it dims the last one a little and draws on top. A picture of a new size is cleared first.
+- Starburst keeps nothing from frame to frame, so the graphics card has nothing to move, only to draw.
+- **Tests:** 163. Each visual is tried in silence and with music, with every control at each end of its range, with a change of size and spark count, and with a picked colour. Each of the three new ones has tests of its own, and so do the changing colours.
+
+**Measured on the iMac (2026-10-04),** release build, each tier at its full size, the busiest part of a busy song:
+
+| Tier | 3 Particle Wave | 4 Tendrils | 5 Fountain | 6 Starburst |
+|---|---|---|---|---|
+| Low | 0.7 ms | 0.7 ms | 0.7 ms | 0.5 ms |
+| Medium | 1.6 ms | 2.5 ms | 1.8 ms | 1.5 ms |
+| High | 4.5 ms (slowest 11.8) | 7.0 ms (slowest 7.4) | 4.7 ms (slowest 5.5) | 4.5 ms (slowest 5.6) |
+| Ultra | 30.1 ms | 35.5 ms | 27.7 ms | 22.9 ms |
+
+- **High holds 60 fps** for all four. The new sparks cost Visualizer 3 about a millisecond (it was 3.6 ms).
+- **In the app,** High, with the sound check and the controls showing: 60 fps for each, and 3.5 to 6.4 ms on the graphics card.
+- **Flashing:** the whole picture's brightness never swung by more than 8% in a third of a second (Visualizer 3), and 3 to 4% in the new ones. A flash is 10% or more.
+
+**Changes from the plan, and why:**
+
+- **Phases 3, 6 and 7 were started together,** as base designs, because the owner asked. They're finished when the owner has tuned each and is happy with it.
+- **Starburst was built from its card alone.** Its picture was sent in chat on 2026-10-03 and never saved in `references/`, so there was nothing to compare with.
+- **The new visuals use the bands' colours,** not their pictures' own (blue and pink for Tendrils, lavender-white for Starburst). The owner asked for that in Visualizer 3, and it lets one set of colours, or the changing ones, work everywhere. Starburst's Whiteness goes all the way to the picture's white.
+- **A spark is one square of pixels, not a patch along its streak.** The patch wastes no pixels but took 7.4 ms against 4.5: four corners for every spark cost more than the pixels saved. So streaks are kept short.
+
+**Known limits:**
+
+- **The owner hasn't watched the three new visuals yet.** They were looked at as saved frames and in the app, muted.
+- **Tendrils' trails smear if the camera moves much,** so its camera moves less than the others'. The song's cover in the hole waits for the visuals with artwork.
+- **Colours changing by themselves** are a different run every time the app starts. There's no way yet to keep a set that turned up and was liked.
+- **Auto quality** still doesn't adapt, and the flashing limit still isn't built.
+

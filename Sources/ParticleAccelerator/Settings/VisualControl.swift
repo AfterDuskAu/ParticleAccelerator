@@ -8,9 +8,9 @@ import simd
 /// (`AcceleratorControls`) is drawn from that list. So a new visual gets a panel by
 /// listing its controls, with nothing else to write.
 struct VisualControl: Identifiable, Equatable {
-    /// What the number means, for showing it: "1.2×", "0.11 s", "55%".
+    /// What the number means, for showing it: "1.2×", "0.11 s", "55%", "64".
     enum Unit {
-        case times, seconds, decibels, bars, share
+        case times, seconds, decibels, bars, share, count
     }
 
     /// The visual it belongs to (docs/VISUALS.md).
@@ -53,10 +53,11 @@ struct VisualControl: Identifiable, Equatable {
     func text(for value: Float) -> String {
         switch unit {
         case .times: return String(format: "%.2f×", value)
-        case .seconds: return String(format: value < 0.1 ? "%.3f s" : "%.2f s", value)
+        case .seconds: return String(format: value < 0.1 ? "%.3f s" : value < 10 ? "%.2f s" : "%.0f s", value)
         case .decibels: return String(format: "%.1f dB", value)
         case .bars: return String(format: "%.1f bars", value)
         case .share: return "\(Int((value * 100).rounded()))%"
+        case .count: return "\(Int(value.rounded()))"
         }
     }
 
@@ -154,14 +155,14 @@ extension ControlValues {
         colours[band.savedName] = nil
     }
 
-    /// True when any of these controls, or any colour, has been changed.
+    /// True when any of these controls, or anything about the colours, has been changed.
     func hasChanges(among controls: [VisualControl]) -> Bool {
-        !colours.isEmpty || controls.contains { isChanged($0) }
+        !colours.isEmpty || (controls + BandPalette.controls).contains { isChanged($0) }
     }
 
     /// Puts these controls, and the colours, back to the visual's own.
     mutating func reset(_ controls: [VisualControl]) {
-        for control in controls { numbers[control.id] = nil }
+        for control in controls + BandPalette.controls { numbers[control.id] = nil }
         colours = [:]
     }
 }

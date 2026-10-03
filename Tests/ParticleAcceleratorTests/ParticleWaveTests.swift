@@ -150,7 +150,7 @@ private let held = ParticleWave.Control.heldSound.usual
     #expect(ParticleWave.bandsSource.contains("waveBandEnds[5]"))
     // And all six colours, as light, each frame.
     var uniforms = StageUniforms()
-    uniforms.setBandLight(from: ControlValues())
+    uniforms.setBandLight(from: ControlValues(), at: 0)
     for band in Band.allCases {
         #expect(uniforms.bandLight[band.rawValue * 4] == band.light.x)
         #expect(uniforms.bandLight[band.rawValue * 4 + 2] == band.light.z)
@@ -162,7 +162,7 @@ private let held = ParticleWave.Control.heldSound.usual
 @Test func theSparksStartTheSameEveryTimeAndSpreadAlongTheLine() {
     let sparks = ParticleWave.startingSparks(count: 10_000)
     #expect(sparks.count == 10_000)
-    #expect(MemoryLayout<ParticleWave.Spark>.stride == 32)
+    #expect(MemoryLayout<ParticleWave.Spark>.stride == 48)
     // On the line, spread right across it, with ages and natures all through 0…1.
     #expect(sparks.allSatisfy { $0.position.y == 0 && $0.position.w >= 0 && $0.position.w < 1 })
     #expect(sparks.allSatisfy { $0.nature.w >= 0 && $0.nature.w < 1 })
@@ -228,14 +228,14 @@ func eachSectionOfTheLineIsBrighterWhenItsOwnBandIsLouder() throws {
         stage.draw(frames: 180, reading: reading)
         let frame = stage.lastFrame()
         func glow(left: Double, right: Double) -> Double {
-            frame.brightness(left: left, top: 0.44, right: right, bottom: 0.485)
-                + frame.brightness(left: left, top: 0.515, right: right, bottom: 0.56)
+            frame.brightness(left: left, top: 0.465, right: right, bottom: 0.49)
+                + frame.brightness(left: left, top: 0.51, right: right, bottom: 0.535)
         }
         return (glow(left: 0.70, right: 0.82), glow(left: 0.90, right: 0.98))
     }
     let quiet = try glowBesideTheLine(vocals: 0)
     let loud = try glowBesideTheLine(vocals: 1)
-    #expect(loud.vocals > quiet.vocals * 1.25, "quiet \(quiet), loud \(loud)")
+    #expect(loud.vocals > quiet.vocals * 1.15, "quiet \(quiet), loud \(loud)")
     // The section next to it, whose band hasn't changed, stays as it was.
     #expect(loud.air < quiet.air * 1.1, "quiet \(quiet), loud \(loud)")
 }

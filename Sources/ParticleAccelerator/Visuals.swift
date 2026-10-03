@@ -13,6 +13,9 @@ public struct VisualInfo: Identifiable, Hashable, Sendable {
     public let isBuilt: Bool
 
     public var id: Int { number }
+    /// True once there's something to show: a first version to try and change, even
+    /// if it isn't finished (`isBuilt`).
+    public var canBeShown: Bool { StageRenderer.visuals.contains { $0.number == number } }
     /// What menus show: the number only for now, such as "Visualizer 3". The names can
     /// come into the menus later, once more visuals are built (owner, 2026-10-03).
     public var title: String { "Visualizer \(number)" }

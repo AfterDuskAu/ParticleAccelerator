@@ -1,6 +1,6 @@
 # Plan
 
-**Status, 2026-10-03:** phase 1 is done and phase 2 is under way. The stage is built and Visualizer 3 (Particle Wave) is on screen in a first version, moving to a song file, the Mac's sound, a microphone or a host app's player. The owner's first notes on it are in (2026-10-03: a colour for each band, quicker sparks). At the owner's request the controls panel (phase 8) was started early, the same day: Visualizer 3's settings and colours can be changed while it plays, and the sound check shows under the visual. Next: the owner tunes Visualizer 3 with the panel, then presets, Auto quality that adapts, and the flashing limit.
+**Status, 2026-10-04:** phase 1 is done; phase 2 (the stage) is done but for Auto quality that adapts and the flashing limit. Four visuals are on screen: Visualizer 3 (Particle Wave) in its second version, and base designs of Visualizers 4 (Tendrils), 5 (Fountain) and 6 (Starburst), each with its controls. The controls panel (phase 8) has every visual's settings on sliders, the bands' colours, and colours that change by themselves. The stage draws on a thread of its own. Next: the owner tunes the four visuals; then presets, Auto quality that adapts, and the flashing limit.
 
 ## What it is
 
@@ -81,11 +81,11 @@ Every visual comes with good settings, and the controls panel lets the owner cha
 | 0 | **Set up** (done 2026-10-03): the repo, rules, plan, secret checks, CI, a first app window, `pa-bench` | A window listing the visuals | done |
 | 1 | **Hearing the music** (done 2026-10-03): the four sources, the analyser, beats, the signal chain, timing. Tests on generated tones, click tracks and a made-up song. Plain test bars and a beat light in the app. | Bars dancing to a song file, to Spotify or a browser, and to a microphone | done |
 | 2 | **The stage and quality tiers, with Visual 3 (Particle Wave):** the drawing, glow, particles, camera, frame counter, Low to Ultra, Auto. **Session 1 done 2026-10-03:** the stage, the tiers, and a first version of Visual 3. **Session 2, 2026-10-03:** a second version from the owner's notes. **Still to do:** the owner's notes on the second version, Auto that adapts, the flashing limit. | The first real visual | 2–3 |
-| 3 | **Visual 5 (Fountain)** | | 1 |
+| 3 | **Visual 5 (Fountain).** Base design built 2026-10-04, at the owner's request, for them to tune with the controls. | | 1 |
 | 4 | **Output options:** window, full screen on any screen, an output screen, frame rate, drawing size, brighter than white | Visuals on a TV or second monitor | 1–2 |
 | 5 | **Visual 1 (Ring & Ink)**, with the cover from a song file's own tags | | 1–2 |
-| 6 | **Visual 6 (Starburst)** | | 1–2 |
-| 7 | **Visual 4 (Tendrils)** | | 2 |
+| 6 | **Visual 6 (Starburst).** Base design built 2026-10-04, likewise. | | 1–2 |
+| 7 | **Visual 4 (Tendrils).** Base design built 2026-10-04, likewise. | | 2 |
 | 8 | **The controls editor and presets:** each control's source, range, curve and fade; save, name, reset, and share as a file. **Started early, 2026-10-03, at the owner's request:** the controls panel, with a slider for each of a visual's settings and a colour for each band, kept with the settings. **Still to do:** presets (save, name, share as a file); choosing which part of the music drives each control; building blocks a person can add (a second line, another layer of sparks). | Vizibeat-style "what moves with what"; a visualizer builder | 2–4 |
 | 9 | **Ready for Music Organizer:** the public API finished as in `INTEGRATION.md`, a test host that uses only that API, version 1.0.0 tagged. Then one session in Music Organizer to add it. | Visuals inside Music Organizer | 1 + 1 |
 | 10 | **Recording a video** from a song file, at any size and frame rate (`OUTPUT.md`) | 4K videos, even from the iMac | 2 |
@@ -97,6 +97,7 @@ Every visual comes with good settings, and the controls panel lets the owner cha
 - **Visual 3 comes first** because it shows the measured spectrum directly, so any problem hearing the music is obvious.
 - **The visuals then run easiest to hardest**, each adding one new building block: the emitter, then the background shader, 3D depth, trails, and finally 3D shapes.
 - **Music Organizer gets it after five visuals and the editor**, when there's a full set to use every day. The owner can move phase 9 earlier at any time.
+- **The three other particle visuals came early as base designs** (owner, 2026-10-04: "add as many base designs that have to do with particles"). With the controls panel, the owner shapes each one themselves, so a first version with good sliders is worth more than a finished one made by guesswork. Visuals 1 and 2 aren't made of particles and keep their places.
 - **The controls panel came early** (owner, 2026-10-03): "an actual visualizer builder", so the owner can change a visual themselves and the two of us can settle a look quickly. Every visual from now on lists its controls as it's built. Whatever is made with it has to reach Music Organizer without trouble, which is why the controls and a person's changes live in the library and not in the app.
 
 **Rough total:** 20–28 sessions, plus the owner's time watching and giving notes.

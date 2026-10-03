@@ -56,7 +56,7 @@ Three things a host should know about its player:
 Optional extras for a host that wants its own menus:
 
 - `Visuals.all`: every visual's number and name, for a picker. Its `title` is what menus show: the number only for now ("Visualizer 3").
-- `AcceleratorControls(settings: $settings)`: the library's own controls panel, ready to drop into the host's Settings or beside the visual. It works today for a visual's controls and colours; choosing the visual and the quality in it comes later.
+- `AcceleratorControls(settings: $settings)`: the library's own controls panel, ready to drop into the host's Settings or beside the visual. It chooses the visual and changes its controls and colours; choosing the quality in it comes later.
 
 ## What the library promises a host
 
@@ -96,3 +96,4 @@ The API is still a plan until version 1.0.0, and these may change before then.
   - `AcceleratorSettings.controls`, a `ControlValues`: the person's own changes (`isEmpty`, `resetAll()`). What's inside it is the library's business; a host only keeps it.
   - `SoundCheckView(listener:controls:)`: the same view, with the bands in the person's colours. `SoundCheckView(listener:)` still works.
   - Settings saved by an older version still open: whatever they lack starts as it would in new settings.
+- **0.1.0, 2026-10-04, added:** `VisualInfo.canBeShown`: true for a visual with something to show, even a first version that isn't finished (`isBuilt`). Visualizers 3, 4, 5 and 6 can be shown. `AcceleratorControls` now has a menu to choose between them.

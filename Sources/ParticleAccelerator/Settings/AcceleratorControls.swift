@@ -57,8 +57,14 @@ public struct AcceleratorControls: View {
     private func header(_ controls: [VisualControl]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Visualizer \(settings.visual)")
-                    .font(.title3.weight(.semibold))
+                // Every visual with something to show, to choose between.
+                Picker("Visualizer", selection: $settings.visual) {
+                    ForEach(Visuals.all.filter { $0.canBeShown || $0.number == settings.visual }) { visual in
+                        Text(visual.title).tag(visual.number)
+                    }
+                }
+                .labelsHidden()
+                .fixedSize()
                 Spacer()
                 Button("Reset All") {
                     settings.controls.reset(controls)
@@ -74,22 +80,56 @@ public struct AcceleratorControls: View {
     }
 
     private var colours: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let changing = BandPalette.changesControl
+        let changes = settings.controls.value(of: changing) >= 0.5
+        return VStack(alignment: .leading, spacing: 8) {
             Text("Colours")
                 .font(.headline)
-            ForEach(Band.allCases, id: \.self) { band in
-                ColourRow(
-                    band: band, colour: settings.controls.colour(of: band),
-                    isChanged: settings.controls.isColourChanged(band),
-                    set: { settings.controls.setColour($0, for: band) },
-                    reset: { settings.controls.resetColour(of: band) }
+            Toggle(
+                changing.name,
+                isOn: Binding(
+                    get: { changes },
+                    set: { isOn in
+                        if isOn {
+                            settings.controls.set(1, for: changing)
+                        } else {
+                            settings.controls.reset(changing)
+                        }
+                    })
+            )
+            .help(changing.help)
+            if changes {
+                let seconds = BandPalette.secondsControl
+                ControlRow(
+                    control: seconds, value: settings.controls.value(of: seconds),
+                    isChanged: settings.controls.isChanged(seconds),
+                    set: { settings.controls.set($0, for: seconds) },
+                    reset: { settings.controls.reset(seconds) }
                 )
                 .equatable()
             }
-            Text("The sound check's bars and meters use the same colours.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Group {
+                ForEach(Band.allCases, id: \.self) { band in
+                    ColourRow(
+                        band: band, colour: settings.controls.colour(of: band),
+                        isChanged: settings.controls.isColourChanged(band),
+                        set: { settings.controls.setColour($0, for: band) },
+                        reset: { settings.controls.resetColour(of: band) }
+                    )
+                    .equatable()
+                }
+            }
+            // A person's own colours wait while the colours are choosing themselves.
+            .disabled(changes)
+            .opacity(changes ? 0.35 : 1)
+            Text(
+                changes
+                    ? "The colours are choosing themselves. Switch that off to pick your own."
+                    : "The sound check's bars and meters use the same colours."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 

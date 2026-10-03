@@ -10,21 +10,22 @@ import SwiftUI
 /// built on it. It stops drawing when its window can't be seen.
 public struct SoundCheckView: View {
     private let listener: MusicListener
-    /// Each band's colour, sub first: the person's own where they've picked one.
-    private let colours: [SIMD3<Float>]
+    /// The bands' colours: the person's own where they've picked any, or changing by
+    /// themselves if that's switched on.
+    private let palette: BandPalette
 
     /// - Parameter controls: the person's own changes (`AcceleratorSettings.controls`),
     ///   so the bars and meters are the same colours as the visual's sections.
     public init(listener: MusicListener, controls: ControlValues = ControlValues()) {
         self.listener = listener
-        colours = Band.allCases.map { controls.colour(of: $0) }
+        palette = BandPalette(controls)
     }
 
     public var body: some View {
         // Drawn again only when the listener or a colour changes. Without this it was
         // laid out afresh for every step of a slider being dragged, though no slider
         // changes anything in it (measured 2026-10-03).
-        SoundCheckContent(listener: listener, colours: colours)
+        SoundCheckContent(listener: listener, palette: palette)
             .equatable()
     }
 }
@@ -32,7 +33,7 @@ public struct SoundCheckView: View {
 /// The sound check itself.
 private struct SoundCheckContent: View, Equatable {
     let listener: MusicListener
-    let colours: [SIMD3<Float>]
+    let palette: BandPalette
     @State private var meters = SoundCheckMeters()
     @State private var isWindowVisible: Bool = true
     /// Where the position slider is being dragged to, while it's being dragged.
@@ -40,7 +41,7 @@ private struct SoundCheckContent: View, Equatable {
     @State private var problem: String?
 
     static func == (one: SoundCheckContent, other: SoundCheckContent) -> Bool {
-        one.listener === other.listener && one.colours == other.colours
+        one.listener === other.listener && one.palette == other.palette
     }
 
     var body: some View {
@@ -59,9 +60,12 @@ private struct SoundCheckContent: View, Equatable {
                         minimumInterval: isLive ? nil : 1.0 / 20,
                         paused: !isWindowVisible || listener.source == .nothing)
                 ) { timeline in
+                    // The colours at this moment, by the same clock the stage uses.
                     LiveMeters(
                         display: meters.update(listener.reading(), at: timeline.date),
-                        colours: Band.allCases.map(colour(of:)))
+                        colours: palette.colours(at: CACurrentMediaTime()).map {
+                            Color(.sRGB, red: Double($0.x), green: Double($0.y), blue: Double($0.z))
+                        })
                 }
                 // The words under the meters. Only the decibels and the tempo change,
                 // and a few times a second is plenty for those.
@@ -201,11 +205,6 @@ private struct SoundCheckContent: View, Equatable {
         }
     }
 
-    /// The band's colour, the same one its section of Visualizer 3 has.
-    private func colour(of band: Band) -> Color {
-        let colour = colours[band.rawValue]
-        return Color(.sRGB, red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
-    }
 }
 
 // MARK: - Words

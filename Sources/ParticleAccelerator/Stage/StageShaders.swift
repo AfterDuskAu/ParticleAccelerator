@@ -26,6 +26,100 @@ enum StageShaders {
         static float3 bandLightOf(constant StageUniforms &stage, int band) {
             return float3(stage.bandLight[band * 4], stage.bandLight[band * 4 + 1], stage.bandLight[band * 4 + 2]);
         }
+
+        // One spark, as its vertex shader hands it on. A spark is drawn as one square
+        // of pixels, and its shape is worked out inside the square: a hot core with a
+        // soft skirt, drawn out into a streak if it's moving, or an even disc if it's
+        // out of focus. That's how a camera sees a spark, which is what makes it look
+        // real (the owner, 2026-10-04: "more realistic, more high def").
+        //
+        // One square for each spark was measured against a four-cornered patch lying
+        // along the streak (2026-10-04, the iMac): the patches waste no pixels, but
+        // drawing four corners for every spark took half as long again.
+        struct SparkOut {
+            float4 position [[position]];
+            float size [[point_size]];
+            // The square's width in pixels again: the size above is only for the
+            // graphics card, and can't be read when the pixels are drawn.
+            float width;
+            half3 light;
+            // Which way it's moving across the picture, and half its streak's length
+            // in pixels.
+            float2 along;
+            float halfStreak;
+            // Its own radius in pixels, and how far out of focus it is, from 0 to 1.
+            float radius;
+            float softness;
+        };
+
+        // Makes a spark from where it is and where it was a moment ago.
+        //   stageRadius: how big it is on the stage.
+        //   light: its colour times its brightness, as it is standing still and sharp.
+        static SparkOut makeSpark(constant StageUniforms &stage, float3 place, float3 placeBefore,
+                                  float stageRadius, float3 light) {
+            SparkOut out;
+            float4 now = stage.viewProjection * float4(place, 1.0);
+            float4 before = stage.viewProjection * float4(placeBefore, 1.0);
+            // Drawn midway, so the streak trails behind it.
+            out.position = (now + before) * 0.5;
+            float distance = max(now.w, 0.05);
+
+            // Its size in pixels at its distance.
+            float diameter = stageRadius / (distance * stage.tanHalfFieldOfView) * stage.pictureSize.y;
+            // Out of focus: bigger and fainter.
+            float blur = fabs(distance - stage.focusDistance) * stage.blurPerUnit * stage.pictureSize.y;
+            float shown = clamp(diameter + blur, 1.6, 0.15 * stage.pictureSize.y);
+
+            // How far it moved across the picture in that moment, in pixels. (The
+            // picture's y runs downwards.) A streak is kept short: the square has to
+            // hold it whichever way it points, and a long one wastes a lot of pixels.
+            float2 moved = (now.xy / distance - before.xy / max(before.w, 0.05))
+                * float2(0.5, -0.5) * stage.pictureSize;
+            float far = length(moved);
+            float streak = min(far, 0.022 * stage.pictureSize.y);
+            out.along = far > 0.01 ? moved / far : float2(1.0, 0.0);
+            out.halfStreak = streak * 0.5;
+            out.radius = shown * 0.5;
+            out.softness = saturate(blur / shown);
+            out.size = shown + streak;
+            out.width = out.size;
+
+            // The same light over more pixels is fainter in each of them.
+            float spread = max((diameter * diameter) / (shown * shown), 0.12);
+            float drawnOut = shown / (shown + 0.6 * streak);
+            out.light = half3(light * spread * drawnOut);
+            return out;
+        }
+
+        // A spark that isn't there: nothing is drawn for it.
+        static SparkOut noSpark() {
+            SparkOut out;
+            out.position = float4(0.0, 0.0, -10.0, 1.0);
+            out.size = 0.0;
+            out.width = 0.0;
+            out.light = half3(0.0h);
+            out.along = float2(1.0, 0.0);
+            out.halfStreak = 0.0;
+            out.radius = 1.0;
+            out.softness = 0.0;
+            return out;
+        }
+
+        fragment half4 sparkLight(SparkOut in [[stage_in]], float2 spot [[point_coord]]) {
+            float2 fromMiddle = (spot - 0.5) * in.width;
+            // How far this pixel is from the streak's line, in spark radiuses.
+            float onStreak = clamp(dot(fromMiddle, in.along), -in.halfStreak, in.halfStreak);
+            float away = length(fromMiddle - in.along * onStreak) / in.radius;
+            // Sharp: a hot core with a soft skirt.
+            float shape = exp(-away * away * 4.5);
+            if (in.softness > 0.01) {
+                // Out of focus: an even disc, a little brighter towards its rim, the
+                // way a lens shows a point of light.
+                float disc = (1.0 - smoothstep(0.82, 1.0, away)) * (0.2 + 0.1 * smoothstep(0.45, 0.9, away));
+                shape = mix(shape, disc, in.softness);
+            }
+            return half4(in.light * half(shape), 1.0h);
+        }
         """
 
     /// Glow and finishing: the last steps of every frame, whatever the visual.

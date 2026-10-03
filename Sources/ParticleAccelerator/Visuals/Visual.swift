@@ -77,4 +77,28 @@ extension MTLDevice {
         colour.destinationAlphaBlendFactor = .one
         return try makeRenderPipelineState(descriptor: descriptor)
     }
+
+    /// A pipeline that dims what's already in the picture: each pixel is multiplied by
+    /// what the fragment shader returns. A visual that leaves trails dims the last
+    /// frame a little with it before drawing the new one on top.
+    func makeDimmingPipeline(library: MTLLibrary, vertex: String, fragment: String) throws
+        -> MTLRenderPipelineState
+    {
+        guard let vertexFunction = library.makeFunction(name: vertex),
+            let fragmentFunction = library.makeFunction(name: fragment)
+        else {
+            throw StageProblem(message: "A shader is missing: \(vertex) or \(fragment).")
+        }
+        let descriptor = MTLRenderPipelineDescriptor()
+        descriptor.vertexFunction = vertexFunction
+        descriptor.fragmentFunction = fragmentFunction
+        let colour = descriptor.colorAttachments[0]!
+        colour.pixelFormat = pictureFormat
+        colour.isBlendingEnabled = true
+        colour.sourceRGBBlendFactor = .zero
+        colour.destinationRGBBlendFactor = .sourceColor
+        colour.sourceAlphaBlendFactor = .zero
+        colour.destinationAlphaBlendFactor = .one
+        return try makeRenderPipelineState(descriptor: descriptor)
+    }
 }

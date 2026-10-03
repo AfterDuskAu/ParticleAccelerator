@@ -74,7 +74,7 @@ final class StageRenderer {
     }
 
     /// Every visual that's built, so far.
-    static let visuals: [Visual.Type] = [ParticleWave.self]
+    static let visuals: [Visual.Type] = [ParticleWave.self, Tendrils.self, Fountain.self, Starburst.self]
 
     /// What a person can change about a visual, or nothing if it isn't built.
     static func controls(ofVisual number: Int) -> [VisualControl] {
@@ -160,6 +160,7 @@ final class StageRenderer {
         uniforms.seconds = Float(seconds)
         uniforms.pictureSize = SIMD2(Float(pictureSize.width), Float(pictureSize.height))
         uniforms.aspect = Float(pictureSize.width) / Float(pictureSize.height)
+        uniforms.setBandLight(from: values, at: time)
         visual.prepare(&uniforms, finishing: &finishing, reading: reading, values: values)
 
         visual.draw(VisualFrame(commands: commands, uniforms: uniforms, picture: picture))
