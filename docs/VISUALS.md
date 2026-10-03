@@ -52,6 +52,13 @@ The pictures are references only. Each visual is drawn by code in the same style
   - A third of the sparks are the reflection, and a few float clear of the peaks.
   - One spark in eight is bright enough to be seen by itself; the rest make a mist.
   - Each kick's ripple runs along the line from the bass end.
+- **Its controls** (View → Controls, since 2026-10-03), each with its own setting to go back to:
+  - **Peaks:** height, width, how much the quieter pitches show, how tall a held sound stands.
+  - **Movement:** rise, fall, drift, camera movement, beat punch.
+  - **Sparks:** size, brightness, twinkle, fullness, floating sparks, reflection.
+  - **Line:** thickness, brightness, haze, kick ripple, tremble.
+  - **Picture:** glow, brightness, dark corners.
+  - **Colours:** one for each band.
 
 ## 4. Tendrils ★★★★
 

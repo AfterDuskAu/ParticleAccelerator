@@ -34,10 +34,18 @@ That's the plan for version 1.0.0. **What works today:**
 let listener = MusicListener()
 listener.listen(to: player)                              // once, when the player is made
 AcceleratorView(listener: listener, settings: settings)  // the visual
-SoundCheckView(listener: listener)                       // or plain bars and meters
+AcceleratorControls(settings: $settings)                 // the panel that changes it while it plays
+SoundCheckView(listener: listener, controls: settings.controls)  // plain bars and meters
 ```
 
-`settings` is an `AcceleratorSettings`: which visual (only 3 so far), the quality, and whether to show the frame time. The artwork comes with Visualizer 1.
+`settings` is an `AcceleratorSettings`: which visual (only 3 so far), the quality, whether to show the frame time, and the person's own changes to the visual (`controls`). The artwork comes with Visualizer 1.
+
+**A look made in Particle Accelerator comes across as it is.** There's nothing to export or convert:
+
+- Each visual's own settings are in the library, so they arrive with the package.
+- A person's changes (the sliders and colours of `AcceleratorControls`) are in `AcceleratorSettings.controls`, which is `Codable`. A host that's handed the same settings shows the same picture.
+- Only what the person changed is saved. Everything else follows the visual's own settings, so a host gets improvements to those without losing the person's changes.
+- The controls panel itself is in the library, so the host can offer the same sliders.
 
 Three things a host should know about its player:
 
@@ -48,7 +56,7 @@ Three things a host should know about its player:
 Optional extras for a host that wants its own menus:
 
 - `Visuals.all`: every visual's number and name, for a picker. Its `title` is what menus show: the number only for now ("Visualizer 3").
-- `AcceleratorControls(settings: $settings)`: the library's own settings panel, ready to drop into the host's Settings.
+- `AcceleratorControls(settings: $settings)`: the library's own controls panel, ready to drop into the host's Settings or beside the visual. It works today for a visual's controls and colours; choosing the visual and the quality in it comes later.
 
 ## What the library promises a host
 
@@ -82,3 +90,8 @@ The API is still a plan until version 1.0.0, and these may change before then.
 - **0.1.0, 2026-10-03, added in phase 2:**
   - `AcceleratorView(listener:settings:)`: the visual.
   - `AcceleratorSettings` (`visual`, `quality`, `limitsFlashing`, `showsFrameTime`) and `Quality` (`auto`, `low`, `medium`, `high`, `ultra`). `limitsFlashing` has nothing behind it yet.
+- **0.1.0, 2026-10-03, added with the controls panel:**
+  - `AcceleratorControls(settings:)`: a slider for each of the chosen visual's controls and a colour for each band.
+  - `AcceleratorSettings.controls`, a `ControlValues`: the person's own changes (`isEmpty`, `resetAll()`). What's inside it is the library's business; a host only keeps it.
+  - `SoundCheckView(listener:controls:)`: the same view, with the bands in the person's colours. `SoundCheckView(listener:)` still works.
+  - Settings saved by an older version still open: whatever they lack starts as it would in new settings.

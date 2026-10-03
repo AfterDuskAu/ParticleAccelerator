@@ -2,7 +2,7 @@
 
 Visuals that move with the music, for the Mac. Particles, light, ink and 3D shapes are driven live by the real sound of a song file, whatever the Mac is playing, or a microphone. It works on an older Intel iMac and scales up to a Mac Studio on a 4K or 6K screen.
 
-**Status:** early (version 0.1.0). The first visual, Visualizer 3 (Particle Wave), is on screen in its second version, after the owner's first notes. It moves to a song file, to whatever the Mac is playing, or to a microphone. See [`docs/PLAN.md`](docs/PLAN.md).
+**Status:** early (version 0.1.0). The first visual, Visualizer 3 (Particle Wave), is on screen in its second version, after the owner's first notes. It moves to a song file, to whatever the Mac is playing, or to a microphone. A controls panel (View → Controls) changes its peaks, movement, sparks, line and colours while it plays. See [`docs/PLAN.md`](docs/PLAN.md).
 
 ## The visuals
 

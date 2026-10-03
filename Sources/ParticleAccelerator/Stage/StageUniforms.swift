@@ -32,10 +32,24 @@ struct StageUniforms {
     var bands = SIMD8<Float>(repeating: 0)
     /// How many seconds ago each of the last four kicks landed.
     var kickAges = SIMD4<Float>(repeating: 1_000)
-    /// Eight numbers for the visual's own use.
-    var controls = SIMD8<Float>(repeating: 0)
+    /// Thirty-two numbers for the visual's own use.
+    var controls = SIMD32<Float>(repeating: 0)
     /// The spectrum, bass first.
     var bars = SIMD64<Float>(repeating: 0)
+    /// The six bands' colours as amounts of light: red, green, blue and a spare for
+    /// each band, sub first (eight numbers spare at the end).
+    var bandLight = SIMD32<Float>(repeating: 0)
+
+    /// Fills in `bandLight` from the bands' colours, the person's own where they've
+    /// picked one.
+    mutating func setBandLight(from values: ControlValues) {
+        for band in Band.allCases {
+            let light = Band.light(of: values.colour(of: band))
+            bandLight[band.rawValue * 4] = light.x
+            bandLight[band.rawValue * 4 + 1] = light.y
+            bandLight[band.rawValue * 4 + 2] = light.z
+        }
+    }
 
     static let metalSource = """
         struct StageUniforms {
@@ -54,8 +68,9 @@ struct StageUniforms {
             float fog;
             float bands[8];
             float kickAges[4];
-            float controls[8];
+            float controls[32];
             float bars[64];
+            float bandLight[32];
         };
         """
 
@@ -78,6 +93,7 @@ struct StageUniforms {
         "kickAges": MemoryLayout<StageUniforms>.offset(of: \.kickAges)!,
         "controls": MemoryLayout<StageUniforms>.offset(of: \.controls)!,
         "bars": MemoryLayout<StageUniforms>.offset(of: \.bars)!,
+        "bandLight": MemoryLayout<StageUniforms>.offset(of: \.bandLight)!,
     ]
 }
 

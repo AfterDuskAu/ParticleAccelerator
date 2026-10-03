@@ -211,3 +211,48 @@ What changed:
 - **Flashing:** across two and a half minutes of the sample song, the whole picture's brightness never moved by more than 7.2% of white within a third of a second (it was 2.1% in the first version). A flash is a swing of 10% or more, so this is still under it, but closer. The flashing limit isn't built yet, and this is a reason to build it soon.
 
 **Still to do in phase 2:** the owner's notes on this second version (then Visualizer 3 is marked built), Auto quality that adapts, the flashing limit, fog.
+
+### Phase 8 begun early: the controls panel, and the sound check under the visual
+
+2026-10-03. After the second version of Visualizer 3 the owner asked for two things:
+
+- **"An actual visualizer builder":** an app where they can change things themselves (speed, peaks, smoothness, colours, preferences), so the two of us can settle a look together, and which helps with future visuals. Whatever is made there has to go into Music Organizer "without any issue".
+- **Both ⌘D displays on one screen,** without switching back and forth.
+
+What was added:
+
+- **The controls panel** (`AcceleratorControls`; View → Controls, ⌘E). For Visualizer 3 it has 23 sliders under five headings (Peaks, Movement, Sparks, Line, Picture) and a colour for each of the six bands.
+  - A change shows at the next frame and is kept with the settings.
+  - Each control has an arrow back to the visual's own setting, and Reset All puts everything back.
+  - Resting the pointer on a control says what it does.
+- **Each visual lists its controls** (`ParticleWave.controls`): a name, a heading, a range, the visual's own setting and a sentence of help. The panel is drawn from the list, so a new visual gets its panel by listing its controls.
+- **A person's changes are part of `AcceleratorSettings`** (`controls`, a `ControlValues`). Only what was changed is saved, so the rest follows the visual's own settings when those get better.
+- **It all lives in the library, not the app,** which is what lets it reach Music Organizer: the same settings give the same picture in any app, and the panel can be shown there too.
+- **The sound check now shows under the visual** (⌘D), not in its place. Its bars run in the same order and the same colours as the visual's sections, and take any colour picked in the panel.
+- The app remembers whether the sound check and the controls were showing.
+- Settings saved before today still open, with the quality and the rest as they were.
+- **Tests:** 131. New ones cover a person's changes (kept, limited to their range, saved and read back), every control's details, and the picture changing with a control and with a picked colour. One draws the picture with every control at each end of its range.
+
+**Measured on the iMac (2026-10-03),** High quality, the sample song, a 2676×1182 picture:
+
+| What's showing | Frames a second | One processor core |
+|---|---|---|
+| The visual alone | 60 | about 7% |
+| The visual over the sound check, as the sound check was first built | 44–50 | about 100% |
+| The same, with the sound check drawing only shapes for each frame | 60 | 17–27% |
+| The visual, the sound check and the controls panel | 60 | 25–50% |
+
+**Changes from the plan, and why:**
+
+- **Phase 8 was started before phases 3 to 7,** because the owner asked for it. What's built is the plain controls and colours. Still to come in phase 8: presets (save, name, share as a file), choosing which part of the music drives each control, and building blocks a person can add.
+- **The sound check was rebuilt inside.** It laid its whole view out afresh for every frame, which was fine alone but took a whole processor core beside the visual and cost the visual a quarter of its frames. Its bars, meters and beat light are now shapes drawn in one pass, and its words change four times a second. `CLAUDE.md` has this as a rule for any view that redraws every frame.
+- **The bands' colours reach the shaders each frame.** They were written into the shader when it was compiled, which a colour picker can't change. The visual's own numbers for the shaders grew from 8 to 32.
+- **"Fall" is one control for two things:** how long a peak takes to sink and how fast its sparks drop. They had separate settings of 0.10 and 0.11 seconds; both are now 0.11.
+- **No draggable dividers** between the visual, the sound check and the controls: their sizes are fixed for now.
+
+**Known limits:**
+
+- **The stage draws on the app's main thread,** so heavy work elsewhere in the window can cost it a frame. The rate dips for a moment when Reset All redraws every control. `CLAUDE.md` rule 6 says nothing should make the drawing wait on the main thread, and this falls short of it. Drawing on a thread of its own is the fix, and is still to do.
+- **Dragging a slider wasn't checked by hand.** The sliders were moved by clicking on their tracks, and the picture followed. The owner's own dragging is the real check.
+- **No presets yet:** there's one set of changes, kept with the app's settings.
+

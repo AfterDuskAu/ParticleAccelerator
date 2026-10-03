@@ -69,6 +69,7 @@ final class StageMetalView: MTKView, MTKViewDelegate {
         } else if newSettings.quality != old.quality {
             changeQuality()
         }
+        renderer?.values = newSettings.controls
         if !newSettings.showsFrameTime { status?.frameTime = nil }
     }
 
@@ -98,6 +99,7 @@ final class StageMetalView: MTKView, MTKViewDelegate {
         switch result {
         case .success(let newRenderer):
             renderer = newRenderer
+            newRenderer.values = settings.controls
             status?.problem = nil
             changeQuality()
         case .failure(let error):

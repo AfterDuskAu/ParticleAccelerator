@@ -19,6 +19,8 @@ protocol Visual: AnyObject {
     static var number: Int { get }
     /// Its Metal shaders, compiled after `StageShaders.common`.
     static var shaderSource: String { get }
+    /// What a person can change about it, in the order the controls panel shows them.
+    static var controls: [VisualControl] { get }
 
     /// - Parameters:
     ///   - library: the visual's shaders, compiled.
@@ -31,7 +33,13 @@ protocol Visual: AnyObject {
     /// Gets a frame's uniforms ready: the camera, and the music put through the
     /// visual's signal chains. `time`, `seconds`, `pictureSize` and `aspect` are
     /// already filled in.
-    func prepare(_ uniforms: inout StageUniforms, reading: SoundReading)
+    /// - Parameters:
+    ///   - finishing: how the picture and its glow become the frame on screen. The
+    ///     visual sets the glow, brightness and dark corners it wants.
+    ///   - values: the person's own changes to the controls and colours.
+    func prepare(
+        _ uniforms: inout StageUniforms, finishing: inout FinishUniforms, reading: SoundReading,
+        values: ControlValues)
 
     /// Moves the visual on by one frame and draws it into the picture.
     func draw(_ frame: VisualFrame)

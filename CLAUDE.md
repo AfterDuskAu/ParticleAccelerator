@@ -34,7 +34,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
   - `Audio/`: audio sources (a file, the Mac's own sound, a microphone, a host's `AVPlayer`), the analyser and beats, and the four-step signal chain
   - `Stage/`: the Metal renderer, particles, the camera, glow, quality tiers and Auto
   - `Visuals/`: one file per visual
-  - `Settings/`: `Codable` settings and presets
+  - `Settings/`: `Codable` settings and presets, each visual's list of controls, and the controls panel
 - `Sources/AtomicIntegers/`: a few lines of C, so the audio thread and the analyser can share a count without a lock (Swift's own atomics need macOS 15).
 - `Sources/ParticleAcceleratorApp/`: the stand-alone app. `scripts/build_app.sh` builds `build/Particle Accelerator.app`.
 - `Sources/PABench/`: `pa-bench`, which measures a Mac's graphics card and suggests a tier (`swift run -c release pa-bench`).
@@ -46,6 +46,8 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
 - Names say what things are, in plain English. Comments say why, not what.
 - Errors shown to a person are plain English, e.g. "This Mac's sound can't be heard until you allow it in System Settings → Privacy & Security → Screen & System Audio Recording." Never a raw error code.
 - Numbers about speed are measured, not guessed. Record them in `docs/OUTPUT.md` with the Mac and the date.
+- Anything a person might want to change about a visual is a control in the visual's list (`ParticleWave.controls`), not a bare number in the code. The controls panel is drawn from the list, and a person's changes are saved in `AcceleratorSettings`, so they reach Music Organizer too.
+- A SwiftUI view that redraws for every frame draws plain shapes in one `Canvas`. Words and controls beside it update a few times a second. Laying a whole view out afresh for every frame cost a full processor core and made the visual drop frames (the sound check, 2026-10-03).
 
 ## Secrets (assume this repository is public)
 

@@ -21,7 +21,6 @@ struct ParticleAcceleratorApp: App {
             MainView(listener: appDelegate.listener, choices: appDelegate.choices) { urls in
                 appDelegate.play(urls)
             }
-            .frame(minWidth: 820, minHeight: 520)
         }
         .commands {
             // These go in the View menu, above Enter Full Screen.
@@ -30,6 +29,9 @@ struct ParticleAcceleratorApp: App {
                 Toggle("Sound Check", isOn: Binding(
                     get: { choices.showsSoundCheck }, set: { choices.showsSoundCheck = $0 }))
                     .keyboardShortcut("d")
+                Toggle("Controls", isOn: Binding(
+                    get: { choices.showsControls }, set: { choices.showsControls = $0 }))
+                    .keyboardShortcut("e")
                 Toggle("Frame Time", isOn: Binding(
                     get: { choices.settings.showsFrameTime },
                     set: { choices.settings.showsFrameTime = $0 }))
@@ -94,6 +96,8 @@ struct ParticleAcceleratorApp: App {
 @Observable
 final class Choices {
     private static let settingsKey = "AcceleratorSettings"
+    private static let soundCheckKey = "ShowsSoundCheck"
+    private static let controlsKey = "ShowsControls"
 
     var settings: AcceleratorSettings {
         didSet {
@@ -101,17 +105,26 @@ final class Choices {
             UserDefaults.standard.set(saved, forKey: Self.settingsKey)
         }
     }
-    /// Shows the plain bars and meters instead of the visual.
-    var showsSoundCheck = false
+    /// Shows the plain bars and meters under the visual.
+    var showsSoundCheck: Bool {
+        didSet { UserDefaults.standard.set(showsSoundCheck, forKey: Self.soundCheckKey) }
+    }
+    /// Shows the controls panel beside the visual.
+    var showsControls: Bool {
+        didSet { UserDefaults.standard.set(showsControls, forKey: Self.controlsKey) }
+    }
 
     init() {
         let saved = UserDefaults.standard.data(forKey: Self.settingsKey)
         settings = saved.flatMap { try? JSONDecoder().decode(AcceleratorSettings.self, from: $0) }
             ?? AcceleratorSettings()
+        showsSoundCheck = UserDefaults.standard.bool(forKey: Self.soundCheckKey)
+        showsControls = UserDefaults.standard.bool(forKey: Self.controlsKey)
     }
 }
 
-/// The window: the visual, or the sound check. Either takes a song dropped on it.
+/// The window: the visual, with the sound check under it and the controls beside it
+/// when they're asked for. A song can be dropped anywhere on it.
 private struct MainView: View {
     let listener: MusicListener
     let choices: Choices
@@ -119,13 +132,29 @@ private struct MainView: View {
     @State private var isDropTarget = false
 
     var body: some View {
-        Group {
-            if choices.showsSoundCheck {
-                SoundCheckView(listener: listener)
-            } else {
+        HStack(spacing: 1) {
+            VStack(spacing: 1) {
                 AcceleratorView(listener: listener, settings: choices.settings)
+                    .frame(minWidth: 560, minHeight: 260)
+                if choices.showsSoundCheck {
+                    // The bars sit under the visual in the same order and the same
+                    // colours as its sections, so one reads against the other.
+                    SoundCheckView(listener: listener, controls: choices.settings.controls)
+                        .frame(height: 370)
+                }
+            }
+            if choices.showsControls {
+                AcceleratorControls(
+                    settings: Binding(get: { choices.settings }, set: { choices.settings = $0 })
+                )
+                .frame(width: 300)
             }
         }
+        .background(Color(white: 0.2))
+        .frame(
+            minWidth: choices.showsControls ? 1_090 : 820,
+            minHeight: choices.showsSoundCheck ? 660 : 520
+        )
         .overlay(alignment: .top) {
             if listener.source == .nothing {
                 VStack(spacing: 6) {

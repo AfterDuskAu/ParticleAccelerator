@@ -25,8 +25,8 @@ final class ParticleWave: Visual {
     /// higher quality gives a finer picture and not a brighter one.
     private static let sparksTheBrightnessIsSetFor: Float = 150_000
 
-    // How the music drives it. These are its built-in settings; the controls editor
-    // (phase 8) will let them be changed.
+    // How the music drives it. These are its own settings; a person changes them in the
+    // controls panel (see "The controls" below).
     private var mountains = Mountains()
     /// How brightly each band's section of the line glows.
     private var bandGlow = Band.allCases.map { band in
@@ -39,7 +39,8 @@ final class ParticleWave: Visual {
         SignalChain(source: .air, shape: SignalShape(low: 0.2, high: 1, steepness: 1.2, riseSeconds: 0.02, fallSeconds: 0.18)))
     private var punch = LiveSignal(
         SignalChain(source: .beat, shape: SignalShape(riseSeconds: 0, fallSeconds: 0.28)))
-    private var drift = CameraDrift()
+    /// How the camera moves before the person's own "Camera movement" and "Beat punch".
+    private let usualDrift = CameraDrift()
 
     /// When each of the last four kicks landed, in stage time.
     private var kickTimes = SIMD4<Float>(repeating: -1_000)
@@ -75,15 +76,24 @@ final class ParticleWave: Visual {
 
     // MARK: Each frame
 
-    func prepare(_ uniforms: inout StageUniforms, reading: SoundReading) {
+    func prepare(
+        _ uniforms: inout StageUniforms, finishing: inout FinishUniforms, reading: SoundReading,
+        values: ControlValues
+    ) {
         let seconds = Double(uniforms.seconds)
+        func value(_ control: VisualControl) -> Float { values.value(of: control) }
 
+        mountains.footprint = value(Control.peakWidth)
+        mountains.decibelsToHalve = value(Control.quietPitches)
+        mountains.heldShare = value(Control.heldSound)
+        mountains.fallSeconds = Double(value(Control.fall))
         uniforms.bars = mountains.update(bars: reading.bars, seconds: seconds)
         uniforms.beat = reading.beat
         uniforms.beatPhase = Float(reading.beatPhase)
         for band in Band.allCases {
             uniforms.bands[band.rawValue] = bandGlow[band.rawValue].update(reading, seconds: seconds)
         }
+        uniforms.setBandLight(from: values)
 
         // Each new beat starts a ripple.
         if reading.beatsHeard != beatsSeen {
@@ -95,6 +105,13 @@ final class ParticleWave: Visual {
         }
         uniforms.kickAges = SIMD4(repeating: uniforms.time) - kickTimes
 
+        var drift = usualDrift
+        let movement = value(Control.cameraMovement)
+        drift.sideways *= movement
+        drift.upAndDown *= movement
+        drift.roll *= movement
+        drift.breath *= movement
+        drift.punch *= value(Control.beatPunch)
         let camera = drift.camera(
             at: Double(uniforms.time), aspect: uniforms.aspect,
             punchNow: punch.update(reading, seconds: seconds) * reading.loudness)
@@ -106,16 +123,37 @@ final class ParticleWave: Visual {
         uniforms.blurPerUnit = 0.006
         uniforms.fog = 0
 
+        finishing.glow = value(Control.glow)
+        finishing.exposure = value(Control.brightness)
+        finishing.vignette = value(Control.darkCorners)
+
         // What the camera sees at the line's distance: half its width and height.
         let halfHeight = uniforms.tanHalfFieldOfView * drift.distance
         let halfWidth = halfHeight * uniforms.aspect
-        uniforms.controls = SIMD8(
-            halfWidth,  // 0: how far the spectrum reaches to each side
-            halfHeight * 0.88,  // 1: how high a full peak reaches
-            0.0042,  // 2: half the line's thickness
-            sparkle.update(reading, seconds: seconds),  // 3: how much the sparks twinkle
-            Self.sparksTheBrightnessIsSetFor / Float(max(sparkCount, 1)),  // 4: each spark's share of the light
-            0, 0, 0)
+        var numbers = SIMD32<Float>(repeating: 0)
+        func put(_ number: Float, in slot: Slot) { numbers[slot.rawValue] = number }
+        put(halfWidth, in: .halfWidth)
+        put(halfHeight * value(Control.peakHeight), in: .reach)
+        put(0.0042 * value(Control.lineThickness), in: .lineThickness)
+        put(sparkle.update(reading, seconds: seconds), in: .sparkle)
+        put(
+            Self.sparksTheBrightnessIsSetFor / Float(max(sparkCount, 1)) * value(Control.sparkBrightness),
+            in: .sparkLight)
+        put(1 / value(Control.rise), in: .riseRate)
+        put(1 / value(Control.fall), in: .fallRate)
+        put(value(Control.drift), in: .drift)
+        put(value(Control.sparkSize), in: .sparkSize)
+        put(value(Control.twinkle), in: .twinkle)
+        // Most sparks sit low on their peak. The fuller the peaks are asked to be, the
+        // more of them sit near the top.
+        put(1.5 / value(Control.fullness), in: .topThinness)
+        put(value(Control.floating), in: .floating)
+        put(value(Control.reflection), in: .reflection)
+        put(value(Control.lineBrightness), in: .lineLight)
+        put(value(Control.lineGlow), in: .lineGlow)
+        put(value(Control.ripple), in: .ripple)
+        put(value(Control.tremble), in: .tremble)
+        uniforms.controls = numbers
     }
 
     func draw(_ frame: VisualFrame) {
@@ -157,6 +195,104 @@ final class ParticleWave: Visual {
         render.endEncoding()
     }
 
+    // MARK: The controls
+
+    /// What a person can change about this visual, with its own setting for each. The
+    /// controls panel shows them in this order, under these headings.
+    enum Control {
+        private static func control(
+            _ key: String, _ name: String, _ group: String, _ unit: VisualControl.Unit,
+            _ range: ClosedRange<Float>, usual: Float, byRatio: Bool = false, _ help: String
+        ) -> VisualControl {
+            VisualControl(
+                visual: ParticleWave.number, key: key, name: name, group: group, unit: unit, range: range,
+                usual: usual, spreadsEvenlyByRatio: byRatio, help: help)
+        }
+
+        static let peakHeight = control(
+            "peakHeight", "Height", "Peaks", .share, 0.2...1, usual: 0.88,
+            "How high a full peak reaches, as a share of the space above the line.")
+        static let peakWidth = control(
+            "peakWidth", "Width", "Peaks", .bars, 1...8, usual: 2.5,
+            "How wide each peak is. Narrow peaks stand apart; wide ones join into ridges.")
+        static let quietPitches = control(
+            "quietPitches", "Quieter pitches", "Peaks", .decibels, 2...14, usual: 5,
+            "A pitch this much quieter than the loudest nearby stands half as tall. Higher shows more of the quieter pitches; lower leaves only the strongest.")
+        static let heldSound = control(
+            "heldSound", "Held sound", "Peaks", .share, 0.1...1, usual: 0.55,
+            "How tall a sound that holds steady stands. Lower makes each fresh hit stand out more.")
+
+        static let rise = control(
+            "rise", "Rise", "Movement", .seconds, 0.015...0.4, usual: 0.035, byRatio: true,
+            "How long sparks take to leap up a peak. Lower is snappier; higher is smoother.")
+        static let fall = control(
+            "fall", "Fall", "Movement", .seconds, 0.03...1.5, usual: 0.11, byRatio: true,
+            "How long sparks take to drop back to the line. Lower keeps one beat clear of the next; higher lets them hang.")
+        static let drift = control(
+            "drift", "Drift", "Movement", .times, 0...4, usual: 1,
+            "How much the sparks wander and bob on their own.")
+        static let cameraMovement = control(
+            "cameraMovement", "Camera movement", "Movement", .times, 0...4, usual: 1,
+            "How far the camera drifts, rolls and breathes. At 0 it stands still.")
+        static let beatPunch = control(
+            "beatPunch", "Beat punch", "Movement", .times, 0...5, usual: 1,
+            "How far the camera jumps towards the stage on each beat.")
+
+        static let sparkSize = control(
+            "sparkSize", "Size", "Sparks", .times, 0.4...3, usual: 1, byRatio: true,
+            "How big each spark is.")
+        static let sparkBrightness = control(
+            "sparkBrightness", "Brightness", "Sparks", .times, 0.2...4, usual: 1, byRatio: true,
+            "How bright the sparks are.")
+        static let twinkle = control(
+            "twinkle", "Twinkle", "Sparks", .times, 0...2, usual: 1,
+            "How much the sparks flicker. The highs in the music add to it.")
+        static let fullness = control(
+            "fullness", "Fullness", "Sparks", .times, 0.4...2.5, usual: 1, byRatio: true,
+            "How many of a peak's sparks sit near its top. Lower leaves the tops thin; higher fills the peaks.")
+        static let floating = control(
+            "floating", "Floating sparks", "Sparks", .share, 0...0.25, usual: 0.03,
+            "The share of sparks that float clear of the peaks.")
+        static let reflection = control(
+            "reflection", "Reflection", "Sparks", .share, 0...1, usual: 0.45,
+            "How bright the reflection below the line is, against the peaks above it.")
+
+        static let lineThickness = control(
+            "lineThickness", "Thickness", "Line", .times, 0.3...6, usual: 1, byRatio: true,
+            "How thick the line is.")
+        static let lineBrightness = control(
+            "lineBrightness", "Brightness", "Line", .times, 0...4, usual: 1,
+            "How bright the line is. Each section still brightens with its own band.")
+        static let lineGlow = control(
+            "lineGlow", "Haze", "Line", .times, 0...5, usual: 1,
+            "How strong the soft haze around the line is.")
+        static let ripple = control(
+            "ripple", "Kick ripple", "Line", .times, 0...5, usual: 1,
+            "How tall the bump is that each kick sends along the line.")
+        static let tremble = control(
+            "tremble", "Tremble", "Line", .times, 0...5, usual: 1,
+            "How much the line shivers under the peaks.")
+
+        static let glow = control(
+            "glow", "Glow", "Picture", .times, 0...2.5, usual: 0.7,
+            "How much everything bright glows.")
+        static let brightness = control(
+            "brightness", "Brightness", "Picture", .times, 0.3...3, usual: 1, byRatio: true,
+            "How bright the whole picture is.")
+        static let darkCorners = control(
+            "darkCorners", "Dark corners", "Picture", .share, 0...1, usual: 0.5,
+            "How much the picture darkens towards its corners.")
+    }
+
+    static let controls: [VisualControl] = [
+        Control.peakHeight, Control.peakWidth, Control.quietPitches, Control.heldSound,
+        Control.rise, Control.fall, Control.drift, Control.cameraMovement, Control.beatPunch,
+        Control.sparkSize, Control.sparkBrightness, Control.twinkle, Control.fullness, Control.floating,
+        Control.reflection,
+        Control.lineThickness, Control.lineBrightness, Control.lineGlow, Control.ripple, Control.tremble,
+        Control.glow, Control.brightness, Control.darkCorners,
+    ]
+
     // MARK: The mountains
 
     /// Turns the spectrum's 64 bars into the mountain range the sparks sit on.
@@ -187,9 +323,9 @@ final class ParticleWave: Visual {
         static let forgetting: Float = 5
         /// A pitch this many decibels quieter than the loudest nearby stands half as
         /// tall.
-        static let decibelsToHalve: Float = 5
+        var decibelsToHalve = Control.quietPitches.usual
         /// A sound that holds steady stands at this share of its height.
-        static let heldShare: Float = 0.55
+        var heldShare = Control.heldSound.usual
         /// A jump of this many decibels above where a bar has been sitting is a full
         /// hit.
         static let fullJump: Float = 8
@@ -197,8 +333,10 @@ final class ParticleWave: Visual {
         /// clear of it for a moment, and down quickly, so it's ready for the next hit.
         static let settling = SignalShape(riseSeconds: 0.30, fallSeconds: 0.10)
         /// How far to each side a peak's triangle reaches, in bars.
-        static let footprint: Float = 2.5
-        static let fade = SignalShape(riseSeconds: 0.012, fallSeconds: 0.10)
+        var footprint = Control.peakWidth.usual
+        /// A peak is up within a frame or two, and takes this long to sink.
+        static let riseSeconds = 0.012
+        var fallSeconds = Double(Control.fall.usual)
 
         /// The loudest each bar has been lately, in decibels below the song's peak.
         private var loudestLately = [Float](repeating: -barDecibels, count: SoundAnalyser.barCount)
@@ -214,32 +352,33 @@ final class ParticleWave: Visual {
                 loudestLately[bar] = max(decibels[bar], loudestLately[bar] - Self.forgetting * Float(seconds))
             }
 
+            let fade = SignalShape(riseSeconds: Self.riseSeconds, fallSeconds: fallSeconds)
             for bar in 0..<count {
                 // Steps 1 and 2.
                 var loudestNearby = Self.quietestTurnedUp
                 for near in max(0, bar - Self.neighbourhood)...min(count - 1, bar + Self.neighbourhood) {
                     loudestNearby = max(loudestNearby, loudestLately[near])
                 }
-                var height = pow(0.5, (loudestNearby - decibels[bar]) / Self.decibelsToHalve)
+                var height = pow(0.5, (loudestNearby - decibels[bar]) / decibelsToHalve)
                 // A bar at the very bottom of the analyser's range is silence.
                 height *= min(1, bars[bar] / 0.1)
 
                 // Step 3.
                 let jump = min(1, max(0, decibels[bar] - sittingAt[bar]) / Self.fullJump)
-                height *= Self.heldShare + (1 - Self.heldShare) * jump
+                height *= heldShare + (1 - heldShare) * jump
                 sittingAt[bar] = Self.settling.fade(sittingAt[bar], towards: decibels[bar], seconds: seconds)
 
                 // Step 4.
-                heights[bar] = Self.fade.fade(heights[bar], towards: min(1, height), seconds: seconds)
+                heights[bar] = fade.fade(heights[bar], towards: min(1, height), seconds: seconds)
             }
 
             // Step 5.
             var range = SIMD64<Float>(repeating: 0)
-            let reach = Int(Self.footprint.rounded(.up))
+            let reach = Int(footprint.rounded(.up))
             for bar in 0..<count {
                 var tallest: Float = 0
                 for near in max(0, bar - reach)...min(count - 1, bar + reach) {
-                    let slope = max(0, 1 - Float(abs(near - bar)) / Self.footprint)
+                    let slope = max(0, 1 - Float(abs(near - bar)) / footprint)
                     tallest = max(tallest, heights[near] * slope)
                 }
                 range[bar] = tallest
@@ -296,25 +435,38 @@ final class ParticleWave: Visual {
 
     // MARK: The shaders
 
-    /// The six bands for the shaders: each one's colour as light, and where each ends
-    /// along the spectrum. Written out from `Band`, so the sections here and the sound
-    /// check's bars can't drift apart.
+    /// Where each band ends along the spectrum, for the shaders. Written out from
+    /// `Band`, so the sections here and the sound check's bars can't drift apart.
     static let bandsSource: String = {
-        let lights = Band.allCases.map { band -> String in
-            let light = band.light
-            return "float3(\(light.x), \(light.y), \(light.z))"
-        }
         // The shaders count along the spectrum from 0 at the middle of the first bar to
         // 1 at the middle of the last.
         let ends = Band.allCases.dropFirst().map { band -> String in
             let place = Band.barPlace(ofHz: band.frequencies.lowerBound)
             return "\((place - 0.5) / Float(SoundAnalyser.barCount - 1))"
         }
-        return """
-            constant float3 waveBandLight[\(lights.count)] = { \(lights.joined(separator: ", ")) };
-            constant float waveBandEnds[\(ends.count)] = { \(ends.joined(separator: ", ")) };
-            """
+        return "constant float waveBandEnds[\(ends.count)] = { \(ends.joined(separator: ", ")) };"
     }()
+
+    /// Where each number sits among the uniforms' `controls`. The shaders are given the
+    /// same names ("wave_reach"), so Swift and Metal can't disagree.
+    private enum Slot: Int, CaseIterable {
+        /// How far the spectrum reaches to each side, and how high a full peak reaches.
+        case halfWidth, reach
+        /// Half the line's thickness.
+        case lineThickness
+        /// How much the sparks twinkle right now, from the highs.
+        case sparkle
+        /// Each spark's share of the light.
+        case sparkLight
+        /// How fast sparks climb and drop, as "so much of the way each second".
+        case riseRate, fallRate
+        case drift, sparkSize, twinkle, topThinness, floating, reflection
+        case lineLight, lineGlow, ripple, tremble
+    }
+
+    private static let slotsSource = Slot.allCases
+        .map { "constant int wave_\($0) = \($0.rawValue);" }
+        .joined(separator: "\n")
 
     static let shaderSource = """
         struct WaveSpark {
@@ -323,6 +475,7 @@ final class ParticleWave: Visual {
         };
 
         \(bandsSource)
+        \(slotsSource)
 
         // Which band a place along the spectrum is in, as a number from 0 (sub) to 5
         // (air). It slides from one whole number to the next across each border, so
@@ -336,10 +489,10 @@ final class ParticleWave: Visual {
         }
 
         // The colour of the band at a place along the spectrum.
-        static float3 waveColourAt(float along) {
+        static float3 waveColourAt(constant StageUniforms &stage, float along) {
             float band = waveBandAt(along);
             int lower = min(int(band), 4);
-            return mix(waveBandLight[lower], waveBandLight[lower + 1], band - float(lower));
+            return mix(bandLightOf(stage, lower), bandLightOf(stage, lower + 1), band - float(lower));
         }
 
         // How loud the band at a place along the spectrum is, from 0 to 1.
@@ -351,7 +504,9 @@ final class ParticleWave: Visual {
 
         // What kind of spark this is, from its own number.
         static bool waveIsReflection(float own) { return chance(own * 13.37) < 0.34; }
-        static bool waveIsStray(float own) { return chance(own * 13.37) > 0.97; }
+        static bool waveIsStray(constant StageUniforms &stage, float own) {
+            return chance(own * 13.37) > 1.0 - stage.controls[wave_floating];
+        }
 
         // Moves every spark on by one frame.
         kernel void waveMoveSparks(device WaveSpark *sparks [[buffer(0)]],
@@ -362,8 +517,9 @@ final class ParticleWave: Visual {
             WaveSpark spark = sparks[index];
             float own = spark.nature.w;
             float lives = spark.nature.y;
-            float halfWidth = stage.controls[0];
-            float reach = stage.controls[1];
+            float halfWidth = stage.controls[wave_halfWidth];
+            float reach = stage.controls[wave_reach];
+            float drifting = stage.controls[wave_drift];
 
             // Sparks live from two and a half to six seconds.
             float lifetime = mix(2.5, 6.0, chance(own * 91.7));
@@ -384,9 +540,9 @@ final class ParticleWave: Visual {
             float peak = spectrumAt(stage, along);
 
             // Most sparks sit low on their peak, and fewer near its top.
-            float share = pow(chance(own * 57.3 + 0.5), 1.5);
+            float share = pow(chance(own * 57.3 + 0.5), stage.controls[wave_topThinness]);
             float target = share * (peak * reach + 0.03);
-            if (waveIsStray(own)) {
+            if (waveIsStray(stage, own)) {
                 // A few float clear of the peaks.
                 target = (0.2 + share * 1.5) * (0.06 + peak * 0.55) * reach * 1.3;
             }
@@ -398,14 +554,15 @@ final class ParticleWave: Visual {
             // drops back quickly: a spark still in the air when the next beat lands
             // blurs the two beats into one.
             float height = spark.position.y;
-            float pull = fabs(target) > fabs(height) ? 28.0 : 9.0;
+            float pull = fabs(target) > fabs(height)
+                ? stage.controls[wave_riseRate] : stage.controls[wave_fallRate];
             height += (target - height) * (1.0 - exp(-pull * stage.seconds));
 
             // A little drift of its own, more where the music is strong.
             float sway = sin(stage.time * (0.6 + 1.7 * chance(own * 3.3)) + own * 60.0);
             float bob = cos(stage.time * (0.8 + 1.3 * chance(own * 5.1)) + own * 40.0);
-            spark.position.x += (spark.nature.x + 0.03 * sway * (0.3 + peak)) * stage.seconds;
-            height += 0.02 * bob * (0.4 + 2.0 * peak) * stage.seconds;
+            spark.position.x += (spark.nature.x + 0.03 * sway * (0.3 + peak)) * drifting * stage.seconds;
+            height += 0.02 * bob * (0.4 + 2.0 * peak) * drifting * stage.seconds;
 
             spark.position.y = height;
             spark.position.w = age;
@@ -425,8 +582,8 @@ final class ParticleWave: Visual {
             WaveSpark spark = sparks[id];
             float own = spark.nature.w;
             float age = spark.position.w;
-            float reach = max(stage.controls[1], 0.001);
-            float twinkling = stage.controls[3];
+            float reach = max(stage.controls[wave_reach], 0.001);
+            float twinkling = stage.controls[wave_sparkle];
 
             WaveSparkOut out;
             out.position = stage.viewProjection * float4(spark.position.xyz, 1.0);
@@ -437,6 +594,7 @@ final class ParticleWave: Visual {
             bool big = chance(own * 23.9) > 0.988;
             float tiny = chance(own * 31.1);
             float stageSize = mix(0.0016, 0.0042, tiny * tiny) + (big ? 0.009 : 0.0);
+            stageSize *= stage.controls[wave_sparkSize];
             float pixels = stageSize / (distance * stage.tanHalfFieldOfView) * stage.pictureSize.y;
             // Out of focus: bigger and fainter.
             float blur = fabs(distance - stage.focusDistance) * stage.blurPerUnit * stage.pictureSize.y;
@@ -446,26 +604,26 @@ final class ParticleWave: Visual {
 
             // The colour of the band it's in. Each is a little paler or deeper than
             // its neighbours, and the big ones are pale.
-            float along = spark.position.x / max(stage.controls[0], 0.001) * 0.5 + 0.5;
-            float3 colour = waveColourAt(along);
+            float along = spark.position.x / max(stage.controls[wave_halfWidth], 0.001) * 0.5 + 0.5;
+            float3 colour = waveColourAt(stage, along);
             colour = mix(colour, float3(1.0), 0.22 * chance(own * 71.3));
             if (big) colour = mix(colour, float3(1.0), 0.4);
             float high = saturate(fabs(spark.position.y) / reach);
 
             float fade = smoothstep(0.0, 0.10, age) * (1.0 - smoothstep(0.72, 1.0, age));
-            float twinkle = 1.0 + (0.35 + 0.9 * twinkling)
+            float twinkle = 1.0 + (0.35 + 0.9 * twinkling) * stage.controls[wave_twinkle]
                 * sin(stage.time * (2.5 + 9.0 * chance(own * 17.3)) + own * 200.0);
             // Most sparks are faint and make a mist together. One in eight is bright
             // enough to be seen as a spark of its own.
             bool bright1in8 = chance(own * 47.9) > 0.875;
-            float bright = (bright1in8 ? 4.4 : 0.6) * stage.controls[4];
+            float bright = (bright1in8 ? 4.4 : 0.6) * stage.controls[wave_sparkLight];
             bright *= fade * max(twinkle, 0.15) * max(spread, 0.12);
             // Sparks lying on the line itself are dimmed, so that in a quiet passage
             // they don't pile up into a thick bright bar.
             bright *= mix(0.3, 1.0, smoothstep(0.0, 0.07, high));
             if (big) bright *= 0.35;
-            if (waveIsStray(own)) bright *= 0.8;
-            if (waveIsReflection(own)) bright *= 0.45;
+            if (waveIsStray(stage, own)) bright *= 0.8;
+            if (waveIsReflection(own)) bright *= stage.controls[wave_reflection];
             out.light = half3(colour * bright);
             return out;
         }
@@ -489,7 +647,7 @@ final class ParticleWave: Visual {
             const float segments = \(lineSegments).0;
             float along = float(id / 2) / segments;
             float side = (id % 2 == 0) ? -1.0 : 1.0;
-            float halfWidth = stage.controls[0];
+            float halfWidth = stage.controls[wave_halfWidth];
             float x = (along * 2.0 - 1.0) * halfWidth * 1.25;
             // Where this is on the spectrum (the line runs a little past each end).
             float onSpectrum = x / halfWidth * 0.5 + 0.5;
@@ -500,14 +658,14 @@ final class ParticleWave: Visual {
                 float since = stage.kickAges[kick];
                 float front = since * 1.6 - 0.05;
                 float from = onSpectrum - front;
-                height += 0.045 * exp(-from * from / 0.004) * exp(-since * 2.2);
+                height += 0.045 * stage.controls[wave_ripple] * exp(-from * from / 0.004) * exp(-since * 2.2);
             }
             // And it trembles a little under the peaks.
             float peak = spectrumAt(stage, onSpectrum);
-            height += 0.006 * peak * sin(x * 90.0 + stage.time * 14.0);
+            height += 0.006 * stage.controls[wave_tremble] * peak * sin(x * 90.0 + stage.time * 14.0);
 
             bool haze = pass == 0;
-            float thickness = stage.controls[2] * (haze ? 22.0 : 1.0);
+            float thickness = stage.controls[wave_lineThickness] * (haze ? 22.0 : 1.0);
             WaveLineOut out;
             out.position = stage.viewProjection * float4(x, height + side * thickness, 0.0, 1.0);
             out.across = side;
@@ -515,8 +673,8 @@ final class ParticleWave: Visual {
             // Its band's colour, brighter and flickering as that band gets louder.
             float flicker = 0.85 + 0.15 * sin(stage.time * 31.0 + x * 7.0) * sin(stage.time * 17.3);
             float level = waveBandLevelAt(stage, onSpectrum);
-            float bright = (0.55 + 6.0 * level) * flicker * (1.0 + 0.6 * peak);
-            float3 colour = waveColourAt(onSpectrum) * (haze ? 0.05 : 1.0);
+            float bright = (0.55 + 6.0 * level) * flicker * (1.0 + 0.6 * peak) * stage.controls[wave_lineLight];
+            float3 colour = waveColourAt(stage, onSpectrum) * (haze ? 0.05 * stage.controls[wave_lineGlow] : 1.0);
             out.light = half3(colour * bright);
             return out;
         }

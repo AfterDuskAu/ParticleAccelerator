@@ -21,6 +21,11 @@ enum StageShaders {
             int bar = min(int(place), 62);
             return mix(stage.bars[bar], stage.bars[bar + 1], place - float(bar));
         }
+
+        // A band's colour as light: 0 is the sub, 5 is the air.
+        static float3 bandLightOf(constant StageUniforms &stage, int band) {
+            return float3(stage.bandLight[band * 4], stage.bandLight[band * 4 + 1], stage.bandLight[band * 4 + 2]);
+        }
         """
 
     /// Glow and finishing: the last steps of every frame, whatever the visual.

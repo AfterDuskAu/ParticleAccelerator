@@ -10,55 +10,62 @@ import SwiftUI
 /// built on it. It stops drawing when its window can't be seen.
 public struct SoundCheckView: View {
     private let listener: MusicListener
+    /// The person's own colours for the bands, where they've picked any.
+    private let values: ControlValues
     @State private var meters = SoundCheckMeters()
     @State private var isWindowVisible: Bool = true
     /// Where the position slider is being dragged to, while it's being dragged.
     @State private var draggedTime: Double?
     @State private var problem: String?
 
-    public init(listener: MusicListener) {
+    /// - Parameter controls: the person's own changes (`AcceleratorSettings.controls`),
+    ///   so the bars and meters are the same colours as the visual's sections.
+    public init(listener: MusicListener, controls: ControlValues = ControlValues()) {
         self.listener = listener
+        values = controls
     }
 
     public var body: some View {
         // With a song file paused, a few frames a second is plenty to let the bars settle.
         let isLive = listener.isPlaying || (listener.source != .songFile && listener.source != .nothing)
-        TimelineView(
-            .animation(
-                minimumInterval: isLive ? nil : 1.0 / 20,
-                paused: !isWindowVisible || listener.source == .nothing)
-        ) { timeline in
-            let display = meters.update(listener.reading(), at: timeline.date)
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                SpectrumBars(bars: display.bars)
-                    .frame(minHeight: 140)
-                HStack(alignment: .bottom, spacing: 14) {
-                    ForEach(Band.allCases, id: \.self) { band in
-                        LevelMeter(
-                            level: display.bands[band], name: band.name,
-                            detail: Self.pitches(of: band),
-                            decibels: display.reading.bandDecibels[band], colour: Self.colour(of: band))
-                    }
-                    LevelMeter(
-                        level: display.loudness, name: "Loudness", detail: "everything",
-                        decibels: display.reading.loudnessDecibels, colour: .white)
-                    Spacer(minLength: 12)
-                    BeatLight(
-                        pulse: display.beat, beatsPerMinute: display.reading.beatsPerMinute,
-                        steadyBeats: display.reading.steadyBeats, isPlaying: listener.isPlaying)
+        VStack(alignment: .leading, spacing: 16) {
+            header
+            ZStack(alignment: .bottomLeading) {
+                // Everything that moves with the music is plain shapes, drawn in one
+                // pass for each frame, and nothing else is touched. Laying the whole
+                // view out afresh for every frame, words and all, took a whole
+                // processor core, and the visual beside it dropped to 45 frames a
+                // second (measured 2026-10-03).
+                TimelineView(
+                    .animation(
+                        minimumInterval: isLive ? nil : 1.0 / 20,
+                        paused: !isWindowVisible || listener.source == .nothing)
+                ) { timeline in
+                    LiveMeters(
+                        display: meters.update(listener.reading(), at: timeline.date),
+                        colours: Band.allCases.map(colour(of:)))
                 }
-                .frame(height: 165)
-                controls
-                if let note = listener.problem ?? problem ?? hint(silentSeconds: display.silentSeconds) {
-                    Text(note)
-                        .font(.callout)
-                        .foregroundStyle(.orange)
-                        .fixedSize(horizontal: false, vertical: true)
+                // The words under the meters. Only the decibels and the tempo change,
+                // and a few times a second is plenty for those.
+                TimelineView(.animation(minimumInterval: 0.25, paused: !isWindowVisible)) { _ in
+                    MeterWords(reading: meters.reading, isPlaying: listener.isPlaying)
                 }
             }
-            .padding(24)
+            .frame(minHeight: 230)
+            // The same goes for the position, the clock and any hint.
+            TimelineView(.animation(minimumInterval: 0.25, paused: !isWindowVisible)) { _ in
+                VStack(alignment: .leading, spacing: 16) {
+                    controls
+                    if let note = listener.problem ?? problem ?? hint(silentSeconds: meters.silentSeconds) {
+                        Text(note)
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
         }
+        .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
         .background(WindowVisibility(isVisible: $isWindowVisible))
@@ -208,10 +215,10 @@ public struct SoundCheckView: View {
         return "\(Int(low))–\(Int(high)) Hz"
     }
 
-    /// The band's own colour, the same one its section of Visualizer 3 has.
-    static func colour(of band: Band) -> Color {
-        let colour = band.colour
-        return Color(red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
+    /// The band's colour, the same one its section of Visualizer 3 has.
+    private func colour(of band: Band) -> Color {
+        let colour = values.colour(of: band)
+        return Color(.sRGB, red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
     }
 }
 
@@ -239,6 +246,11 @@ private final class SoundCheckMeters {
     private var display = Display()
     private var lastFrame: Date?
 
+    /// How long it's been since anything at all was heard.
+    var silentSeconds: Double { display.silentSeconds }
+    /// What was last heard.
+    var reading: SoundReading { display.reading }
+
     func update(_ reading: SoundReading, at date: Date) -> Display {
         // A long gap (the window was hidden) counts as one short frame.
         let seconds = min(0.1, max(0, lastFrame.map { date.timeIntervalSince($0) } ?? 0))
@@ -256,45 +268,134 @@ private final class SoundCheckMeters {
     }
 }
 
-private struct SpectrumBars: View {
-    let bars: SIMD64<Float>
+/// Where things sit in the row of meters, shared by the shapes and the words under them.
+private enum MeterRow {
+    /// The whole row's height, and how much of it at the bottom is words.
+    static let height: CGFloat = 150
+    static let wordsHeight: CGFloat = 52
+    /// Each meter has a column this wide: room for "Vocals and snare".
+    static let columnWidth: CGFloat = 88
+    static let columnGap: CGFloat = 2
+    /// The beat light's column, at the right.
+    static let beatWidth: CGFloat = 150
+}
+
+/// Everything in the sound check that moves with the music, as plain shapes drawn in one
+/// pass: the 64 bars, the six bands' meters and the loudness, and the beat light with
+/// four dots that step once a beat. The words are in `MeterWords`.
+private struct LiveMeters: View {
+    let display: SoundCheckMeters.Display
+    /// Each band's colour, sub first.
+    let colours: [Color]
+
+    /// The band each bar of the spectrum belongs to.
+    private static let bandOfBar = (0..<SoundAnalyser.barCount).map { Band.of(bar: $0).rawValue }
 
     var body: some View {
-        Canvas { context, size in
-            let count = SoundAnalyser.barCount
-            let gap: CGFloat = 2
-            let width = max(1, (size.width - gap * CGFloat(count - 1)) / CGFloat(count))
-            for index in 0..<count {
-                let height = max(2, CGFloat(bars[index]) * size.height)
-                let bar = CGRect(
-                    x: CGFloat(index) * (width + gap), y: size.height - height, width: width,
-                    height: height)
-                let colour = SoundCheckView.colour(of: Band.of(bar: index))
-                context.fill(Path(roundedRect: bar, cornerRadius: min(2, width / 2)), with: .color(colour))
-            }
+        Canvas(opaque: true, rendersAsynchronously: true) { context, size in
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black))
+            let barsHeight = max(40, size.height - MeterRow.height - 16)
+            drawBars(&context, in: CGRect(x: 0, y: 0, width: size.width, height: barsHeight))
+            let row = CGRect(x: 0, y: size.height - MeterRow.height, width: size.width, height: MeterRow.height)
+            drawMeters(&context, in: row)
+            drawBeat(
+                &context,
+                in: CGRect(x: row.maxX - MeterRow.beatWidth, y: row.minY, width: MeterRow.beatWidth, height: row.height))
         }
-        .accessibilityLabel("Spectrum: bass on the left, highs on the right")
+        .accessibilityLabel("Spectrum and levels: bass on the left, highs on the right")
+    }
+
+    /// The spectrum: bass on the left, highs on the right, each bar in its band's colour.
+    private func drawBars(_ context: inout GraphicsContext, in area: CGRect) {
+        let count = SoundAnalyser.barCount
+        let gap: CGFloat = 2
+        let width = max(1, (area.width - gap * CGFloat(count - 1)) / CGFloat(count))
+        for index in 0..<count {
+            let height = max(2, CGFloat(display.bars[index]) * area.height)
+            let bar = CGRect(
+                x: area.minX + CGFloat(index) * (width + gap), y: area.maxY - height, width: width,
+                height: height)
+            context.fill(
+                Path(roundedRect: bar, cornerRadius: min(2, width / 2)),
+                with: .color(colours[Self.bandOfBar[index]]))
+        }
+    }
+
+    /// The six bands' meters and the loudness, one above each column of words.
+    private func drawMeters(_ context: inout GraphicsContext, in row: CGRect) {
+        var meters = Band.allCases.map { (level: display.bands[$0], colour: colours[$0.rawValue]) }
+        meters.append((display.loudness, .white))
+        for (column, meter) in meters.enumerated() {
+            let middle = row.minX + CGFloat(column) * (MeterRow.columnWidth + MeterRow.columnGap)
+                + MeterRow.columnWidth / 2
+            let track = CGRect(
+                x: middle - 13, y: row.minY, width: 26, height: row.height - MeterRow.wordsHeight)
+            context.fill(Path(roundedRect: track, cornerRadius: 4), with: .color(.white.opacity(0.08)))
+            let height = max(2, track.height * CGFloat(meter.level))
+            let filled = CGRect(x: track.minX, y: track.maxY - height, width: track.width, height: height)
+            context.fill(Path(roundedRect: filled, cornerRadius: 4), with: .color(meter.colour))
+        }
+    }
+
+    /// A light that pulses on each beat heard, and four dots that step once a beat on
+    /// the steady count.
+    private func drawBeat(_ context: inout GraphicsContext, in area: CGRect) {
+        let pulse = Double(display.beat)
+        let middle = CGPoint(x: area.midX, y: area.minY + 38)
+        let orange = Color(hue: 0.06, saturation: 0.7, brightness: 1)
+        // A soft glow around the light, then the light itself.
+        let glow = CGRect(x: middle.x - 44, y: middle.y - 44, width: 88, height: 88)
+        context.fill(
+            Path(ellipseIn: glow),
+            with: .radialGradient(
+                Gradient(colors: [Color.orange.opacity(0.55 * pulse), Color.orange.opacity(0)]),
+                center: middle, startRadius: 24, endRadius: 44))
+        let light = CGRect(x: middle.x - 27, y: middle.y - 27, width: 54, height: 54)
+        context.fill(Path(ellipseIn: light), with: .color(.black))
+        context.fill(Path(ellipseIn: light), with: .color(orange.opacity(0.12 + 0.88 * pulse)))
+
+        let hasTempo = display.reading.beatsPerMinute != nil
+        for step in 0..<4 {
+            let dot = CGRect(x: middle.x - 25 + CGFloat(step) * 14, y: middle.y + 50, width: 8, height: 8)
+            let isNow = hasTempo && display.reading.steadyBeats % 4 == step
+            context.fill(Path(ellipseIn: dot), with: .color(.white.opacity(isNow ? 0.9 : 0.15)))
+        }
     }
 }
 
-private struct LevelMeter: View {
-    let level: Float
-    let name: String
-    let detail: String
-    /// The real loudness, before auto-gain.
-    let decibels: Float
-    let colour: Color
+/// The words under the meters: each band's name, its pitches and its real loudness in
+/// decibels, and the tempo under the beat light.
+private struct MeterWords: View {
+    let reading: SoundReading
+    let isPlaying: Bool
+
+    private var tempo: String {
+        if let beatsPerMinute = reading.beatsPerMinute { return "\(Int(beatsPerMinute.rounded())) BPM" }
+        return isPlaying ? "Finding the tempo…" : "– BPM"
+    }
 
     var body: some View {
-        VStack(spacing: 6) {
-            GeometryReader { space in
-                ZStack(alignment: .bottom) {
-                    RoundedRectangle(cornerRadius: 4).fill(Color.white.opacity(0.08))
-                    RoundedRectangle(cornerRadius: 4).fill(colour)
-                        .frame(height: max(2, space.size.height * CGFloat(level)))
-                }
+        HStack(alignment: .top, spacing: MeterRow.columnGap) {
+            ForEach(Band.allCases, id: \.self) { band in
+                words(band.name, SoundCheckView.pitches(of: band), decibels: reading.bandDecibels[band])
             }
-            .frame(width: 26)
+            words("Loudness", "everything", decibels: reading.loudnessDecibels)
+            Spacer(minLength: 0)
+            Text(tempo)
+                .font(.callout.weight(.medium))
+                .monospacedDigit()
+                .frame(width: MeterRow.beatWidth)
+                .accessibilityLabel("Beat")
+                .accessibilityValue(
+                    reading.beatsPerMinute.map { "\(Int($0.rounded())) beats a minute" } ?? "Finding the tempo")
+        }
+        .lineLimit(1)
+        .padding(.top, 6)
+        .frame(height: MeterRow.wordsHeight, alignment: .top)
+    }
+
+    private func words(_ name: String, _ detail: String, decibels: Float) -> some View {
+        VStack(spacing: 3) {
             Text(name)
                 .font(.caption.weight(.medium))
             Text(detail)
@@ -304,50 +405,11 @@ private struct LevelMeter: View {
                 .font(.caption2)
                 .monospacedDigit()
                 .foregroundStyle(.tertiary)
-                .frame(minWidth: 44)
         }
-        .lineLimit(1)
-        .fixedSize(horizontal: true, vertical: false)
+        .frame(width: MeterRow.columnWidth)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(name), \(detail)")
-        .accessibilityValue("\(Int((level * 100).rounded())) percent, \(SoundCheckView.decibelsText(decibels))")
-    }
-}
-
-/// A small light that pulses on each beat heard, the tempo, and four dots that step
-/// once a beat on the steady count.
-private struct BeatLight: View {
-    let pulse: Float
-    let beatsPerMinute: Double?
-    let steadyBeats: Int
-    let isPlaying: Bool
-
-    private var tempo: String {
-        if let beatsPerMinute { return "\(Int(beatsPerMinute.rounded())) BPM" }
-        return isPlaying ? "Finding the tempo…" : "– BPM"
-    }
-
-    var body: some View {
-        VStack(spacing: 10) {
-            Circle()
-                .fill(Color(hue: 0.06, saturation: 0.7, brightness: 1).opacity(0.12 + 0.88 * Double(pulse)))
-                .frame(width: 54, height: 54)
-                .shadow(color: .orange.opacity(0.8 * Double(pulse)), radius: 14)
-            Text(tempo)
-                .font(.callout.weight(.medium))
-                .monospacedDigit()
-            HStack(spacing: 6) {
-                ForEach(0..<4, id: \.self) { step in
-                    Circle()
-                        .fill(Color.white.opacity(beatsPerMinute != nil && steadyBeats % 4 == step ? 0.9 : 0.15))
-                        .frame(width: 8, height: 8)
-                }
-            }
-        }
-        .frame(width: 150)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Beat")
-        .accessibilityValue(beatsPerMinute.map { "\(Int($0.rounded())) beats a minute" } ?? "Finding the tempo")
+        .accessibilityValue(SoundCheckView.decibelsText(decibels))
     }
 }
 

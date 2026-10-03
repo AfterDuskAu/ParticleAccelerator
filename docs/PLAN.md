@@ -1,6 +1,6 @@
 # Plan
 
-**Status, 2026-10-03:** phase 1 is done and phase 2 is under way. The stage is built and Visualizer 3 (Particle Wave) is on screen in a first version, moving to a song file, the Mac's sound, a microphone or a host app's player. The owner's first notes on it are in (2026-10-03: a colour for each band, quicker sparks). Next: their notes on that second version, Auto quality that adapts, and the flashing limit.
+**Status, 2026-10-03:** phase 1 is done and phase 2 is under way. The stage is built and Visualizer 3 (Particle Wave) is on screen in a first version, moving to a song file, the Mac's sound, a microphone or a host app's player. The owner's first notes on it are in (2026-10-03: a colour for each band, quicker sparks). At the owner's request the controls panel (phase 8) was started early, the same day: Visualizer 3's settings and colours can be changed while it plays, and the sound check shows under the visual. Next: the owner tunes Visualizer 3 with the panel, then presets, Auto quality that adapts, and the flashing limit.
 
 ## What it is
 
@@ -43,7 +43,7 @@ Each visual has a few controls. Visual 5's, for example, are spray height, burst
 3. **Curve:** straight, or steeper so only the strong hits show.
 4. **Fade:** how fast it rises and how slowly it falls away (Vizibeat's *Tail*).
 
-Every visual comes with good settings, and the controls editor (phase 8) lets the owner change them and save presets.
+Every visual comes with good settings, and the controls panel lets the owner change them while it plays (View → Controls). Saving them as named presets comes with the rest of phase 8.
 
 **How it works inside:**
 
@@ -86,7 +86,7 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 | 5 | **Visual 1 (Ring & Ink)**, with the cover from a song file's own tags | | 1–2 |
 | 6 | **Visual 6 (Starburst)** | | 1–2 |
 | 7 | **Visual 4 (Tendrils)** | | 2 |
-| 8 | **The controls editor and presets:** each control's source, range, curve and fade; save, name, reset, and share as a file | Vizibeat-style "what moves with what" | 2 |
+| 8 | **The controls editor and presets:** each control's source, range, curve and fade; save, name, reset, and share as a file. **Started early, 2026-10-03, at the owner's request:** the controls panel, with a slider for each of a visual's settings and a colour for each band, kept with the settings. **Still to do:** presets (save, name, share as a file); choosing which part of the music drives each control; building blocks a person can add (a second line, another layer of sparks). | Vizibeat-style "what moves with what"; a visualizer builder | 2–4 |
 | 9 | **Ready for Music Organizer:** the public API finished as in `INTEGRATION.md`, a test host that uses only that API, version 1.0.0 tagged. Then one session in Music Organizer to add it. | Visuals inside Music Organizer | 1 + 1 |
 | 10 | **Recording a video** from a song file, at any size and frame rate (`OUTPUT.md`) | 4K videos, even from the iMac | 2 |
 | 11 | **Visual 2 (Iron Maw)** | | 3–5 |
@@ -97,6 +97,7 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 - **Visual 3 comes first** because it shows the measured spectrum directly, so any problem hearing the music is obvious.
 - **The visuals then run easiest to hardest**, each adding one new building block: the emitter, then the background shader, 3D depth, trails, and finally 3D shapes.
 - **Music Organizer gets it after five visuals and the editor**, when there's a full set to use every day. The owner can move phase 9 earlier at any time.
+- **The controls panel came early** (owner, 2026-10-03): "an actual visualizer builder", so the owner can change a visual themselves and the two of us can settle a look quickly. Every visual from now on lists its controls as it's built. Whatever is made with it has to reach Music Organizer without trouble, which is why the controls and a person's changes live in the library and not in the app.
 
 **Rough total:** 20–28 sessions, plus the owner's time watching and giving notes.
 

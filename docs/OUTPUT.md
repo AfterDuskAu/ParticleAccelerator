@@ -71,6 +71,21 @@ High holds 60 fps on the iMac with room to spare. Ultra needs a faster Mac. The 
 
 Measuring the sound costs almost nothing beside a frame's 16.7 ms. The sound check's cost is its SwiftUI drawing, which the visuals won't use: they draw with Metal.
 
+### The visual, the sound check and the controls in one window
+
+**2019 iMac, 2026-10-03,** High quality, the sample song playing, a 2676×1182 picture:
+
+| What's showing | Frames a second | One processor core |
+|---|---|---|
+| The visual alone | 60 | about 7% |
+| The visual over the sound check, as the sound check was first built | 44–50 | about 100% |
+| The same, with the sound check drawing only shapes for each frame | 60 | 17–27% |
+| The visual, the sound check and the controls panel | 60 | 25–50% |
+
+The graphics card's time stayed at about 3 ms a frame throughout: the frames were lost on the processor. The sound check had been laying its whole view out afresh for every frame, words and all. Now the bars, meters and beat light are shapes drawn in one pass, and the words change four times a second.
+
+The stage still draws on the app's main thread, so heavy work elsewhere in the window can cost it a frame: the rate dips for a moment when Reset All redraws every control. Drawing on a thread of its own would end that, and is still to do.
+
 ### Keeping the picture in time with the sound
 
 **2019 iMac, 2026-10-03:**

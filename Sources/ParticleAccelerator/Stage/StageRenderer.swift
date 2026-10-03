@@ -19,7 +19,9 @@ final class StageRenderer {
     let timer = FrameTimer()
     private(set) var tier: QualityTier
     private(set) var pictureSize: (width: Int, height: Int) = (0, 0)
-    var finishing = FinishUniforms()
+    /// The person's own changes to the visual's controls and colours. They take
+    /// effect at the next frame.
+    var values = ControlValues()
 
     private let queue: MTLCommandQueue
     private let visual: Visual
@@ -30,6 +32,7 @@ final class StageRenderer {
     private var picture: MTLTexture?
     private var glow: [MTLTexture] = []
     private var uniforms = StageUniforms()
+    private var finishing = FinishUniforms()
     private var lastFrameTime: Double?
 
     /// Sets the stage up for one visual: compiles its shaders and makes its sparks.
@@ -72,6 +75,11 @@ final class StageRenderer {
 
     /// Every visual that's built, so far.
     static let visuals: [Visual.Type] = [ParticleWave.self]
+
+    /// What a person can change about a visual, or nothing if it isn't built.
+    static func controls(ofVisual number: Int) -> [VisualControl] {
+        visuals.first { $0.number == number }?.controls ?? []
+    }
 
     /// Every piece of shader source the stage can be asked to compile, with a name, for
     /// the test that compiles them all.
@@ -152,7 +160,7 @@ final class StageRenderer {
         uniforms.seconds = Float(seconds)
         uniforms.pictureSize = SIMD2(Float(pictureSize.width), Float(pictureSize.height))
         uniforms.aspect = Float(pictureSize.width) / Float(pictureSize.height)
-        visual.prepare(&uniforms, reading: reading)
+        visual.prepare(&uniforms, finishing: &finishing, reading: reading, values: values)
 
         visual.draw(VisualFrame(commands: commands, uniforms: uniforms, picture: picture))
         encodeGlow(of: picture, commands)

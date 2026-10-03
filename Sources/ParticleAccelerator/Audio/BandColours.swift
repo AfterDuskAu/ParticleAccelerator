@@ -3,7 +3,9 @@ import simd
 
 /// Each band has one colour of its own, the same wherever the band is shown: the sound
 /// check's bars and meters, and the sections of Visualizer 3. Warm for the bass through
-/// to cool for the highs, and far enough apart to tell at a glance.
+/// to cool for the highs, and far enough apart to tell at a glance. A person can pick
+/// their own in the controls panel (`ControlValues.colour(of:)`); these are what they
+/// start from.
 ///
 /// The owner asked for this on 2026-10-03: with every part of the spectrum in the same
 /// colours, a busy passage was one mass and showed nothing.
@@ -20,14 +22,8 @@ extension Band {
         }
     }
 
-    /// The same colour as amounts of light, which is what the shaders add up. (A screen's
-    /// numbers aren't amounts of light: half the number is about a fifth of the light.)
-    var light: SIMD3<Float> {
-        func asLight(_ shown: Float) -> Float {
-            shown <= 0.04045 ? shown / 12.92 : pow((shown + 0.055) / 1.055, 2.4)
-        }
-        return SIMD3(asLight(colour.x), asLight(colour.y), asLight(colour.z))
-    }
+    /// The same colour as amounts of light, which is what the shaders add up.
+    var light: SIMD3<Float> { Band.light(of: colour) }
 
     /// Where a pitch falls among the spectrum's bars: 0 is the bottom of the first bar,
     /// and 64 is the top of the last.
