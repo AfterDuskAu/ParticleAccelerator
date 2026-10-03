@@ -36,6 +36,23 @@ struct Frame {
         return total / Double(max(count, 1))
     }
 
+    /// The average red, green and blue of a rectangle given the same way, each from 0
+    /// to 1.
+    func colour(left: Double, top: Double, right: Double, bottom: Double) -> (red: Double, green: Double, blue: Double) {
+        var red = 0.0, green = 0.0, blue = 0.0
+        var count = 0.0
+        for y in Int(top * Double(height))..<min(height, max(Int(top * Double(height)) + 1, Int(bottom * Double(height)))) {
+            for x in Int(left * Double(width))..<min(width, max(Int(left * Double(width)) + 1, Int(right * Double(width)))) {
+                let start = (y * width + x) * 4
+                blue += Double(pixels[start])
+                green += Double(pixels[start + 1])
+                red += Double(pixels[start + 2])
+                count += 255
+            }
+        }
+        return (red / max(count, 1), green / max(count, 1), blue / max(count, 1))
+    }
+
     /// The average brightness of each row, top to bottom.
     var rows: [Double] {
         (0..<height).map { y in

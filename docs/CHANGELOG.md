@@ -171,3 +171,43 @@
 - **Auto quality that adapts** while it plays.
 - **The flashing limit itself.** The setting exists and is on, but there's nothing behind it yet. Visualizer 3 doesn't need it (measured above); a visual that flashes will.
 - **Fog.** The camera has a setting for it that no visual uses yet.
+
+### Phase 2, session 2: Visualizer 3 after the owner's first notes
+
+2026-10-03. The owner watched the first version with a song or two. Their notes:
+
+- In a busy passage "everything is just mushed together". With a slow beat it was fine.
+- The sound check gives each section (sub, kick and so on) its own colour, sorted along a line. The visual had the line and the mountains but mixed the colours, "so it doesn't actually display anything". They asked for the visual to be separated into colours.
+- The sparks were slow to return to the line, so when the next beat came the two blended.
+
+What changed:
+
+- **One colour for each band** (`Band.colour`): orange, pink, violet, blue, cyan and green, from the bass up. Each band's section of Visualizer 3 is that colour: its sparks, its reflection and its piece of the line. Before, every part of the spectrum was pink low down and blue high up.
+- **The sound check uses the same six colours** for its bars and meters, so it works as a key to the visual. Its bars are now coloured by the band they belong to; they were a smooth run from blue to pink.
+- **Hits stand above held sound.** A sound that holds steady sinks to 55% of its height, and one that has just jumped up by 8 decibels or more stands at its full height. In a busy passage everything is loud all the time, and this is what lets the beats show in it.
+- **Sharper peaks.** A pitch 5 decibels quieter than the loudest nearby stands half as tall (it was 6), and each peak's triangle reaches two and a half bars to each side (it was three and a half).
+- **Quick up and quick down.** A hit's sparks are most of the way up within a twentieth of a second, and down to a fifth of their height three tenths of a second after the sound stops. In the first version, getting down that far took a full second.
+- **Each section of the line brightens with its own band.** It used to follow the loudness of the whole song.
+- Fewer sparks float clear of the peaks (3%, was 5.5%), and more of each peak's sparks sit near its top.
+- **Tests:** 114. New ones cover the bands' colours, each section's colour in the finished picture, and a kick every half second leaping every time and settling before the next.
+
+**Measured on the iMac (2026-10-03), release build, each tier at its full size:**
+
+| Tier | Graphics card per frame |
+|---|---|
+| Low | 0.7 ms |
+| Medium | 1.5 ms |
+| High | 3.6 ms (slowest 8.3) |
+| Ultra | 22.2 ms |
+
+- **In the app:** 60 fps and 3.2 ms a frame (slowest 3.9) at High in a 2546×1448 picture, with the sample song playing muted. About 7% of one processor core.
+- **The busiest eight seconds of two songs,** before and after. "How full" is the mountains' average height; "how much it moves" is how far each bar's height swings in time, against its own average.
+
+| | How full, before | after | How much it moves, before | after |
+|---|---|---|---|---|
+| The sample song's last chorus | 0.40 | 0.28 | 0.40 | 0.67 |
+| A busy electronic song's drop | 0.35 | 0.25 | 0.51 | 0.83 |
+
+- **Flashing:** across two and a half minutes of the sample song, the whole picture's brightness never moved by more than 7.2% of white within a third of a second (it was 2.1% in the first version). A flash is a swing of 10% or more, so this is still under it, but closer. The flashing limit isn't built yet, and this is a reason to build it soon.
+
+**Still to do in phase 2:** the owner's notes on this second version (then Visualizer 3 is marked built), Auto quality that adapts, the flashing limit, fog.

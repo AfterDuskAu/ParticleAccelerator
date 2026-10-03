@@ -208,13 +208,10 @@ public struct SoundCheckView: View {
         return "\(Int(low))–\(Int(high)) Hz"
     }
 
-    /// Blue for the bass through violet to pink for the highs, like Visual 3's sparks.
-    static func colour(at position: Double) -> Color {
-        Color(hue: 0.60 + 0.32 * position, saturation: 0.72, brightness: 1)
-    }
-
+    /// The band's own colour, the same one its section of Visualizer 3 has.
     static func colour(of band: Band) -> Color {
-        colour(at: Double(band.rawValue) / Double(Band.allCases.count - 1))
+        let colour = band.colour
+        return Color(red: Double(colour.x), green: Double(colour.y), blue: Double(colour.z))
     }
 }
 
@@ -272,7 +269,7 @@ private struct SpectrumBars: View {
                 let bar = CGRect(
                     x: CGFloat(index) * (width + gap), y: size.height - height, width: width,
                     height: height)
-                let colour = SoundCheckView.colour(at: Double(index) / Double(count - 1))
+                let colour = SoundCheckView.colour(of: Band.of(bar: index))
                 context.fill(Path(roundedRect: bar, cornerRadius: min(2, width / 2)), with: .color(colour))
             }
         }

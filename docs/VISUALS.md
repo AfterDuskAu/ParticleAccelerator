@@ -8,7 +8,7 @@ The pictures are references only. Each visual is drawn by code in the same style
 |---|---|---|---|---|
 | 1 | Ring & Ink | very close | ★★ | planned |
 | 2 | Iron Maw | a stylised version | ★★★★★ | planned |
-| 3 | Particle Wave | very close | ★★ | first version built 2026-10-03; waiting for the owner's notes |
+| 3 | Particle Wave | close in shape; the colours are ours | ★★ | second version built 2026-10-03, after the owner's first notes; waiting for their notes on it |
 | 4 | Tendrils | close in motion | ★★★★ | planned |
 | 5 | Fountain | very close | ★ | planned |
 | 6 | Starburst | close | ★★★ | planned; picture still to be saved in `references/` |
@@ -35,12 +35,20 @@ The pictures are references only. Each visual is drawn by code in the same style
 
 *Reference: a still of a particle waveform.*
 
-- **In it:** a glowing orange-pink line across the middle. Tens of thousands of blue, violet and pink sparks form peaks above it, with a dimmer reflection below.
-- **With the music:** the peaks are the spectrum, bass on the left and highs on the right. Sparks ride their peaks with a little drift, then fall and fade. The line brightens and flickers with loudness, and a kick sends a ripple along it.
-- **How close:** very close.
+- **In the picture:** a glowing orange-pink line across the middle. Tens of thousands of blue, violet and pink sparks form peaks above it, with a dimmer reflection below.
+- **With the music:**
+  - The peaks are the spectrum, bass on the left and highs on the right.
+  - Each of the six bands has a section of its own, in its own colour: its sparks, its reflection and its piece of the line. From the bass: orange, pink, violet, blue, cyan, green.
+  - Sparks leap up their peaks on a hit and drop straight back, so one beat is over before the next lands.
+  - Each section of the line brightens with its own band, and a kick sends a ripple along the line.
+- **How close:** close in shape. The colours are ours, not the picture's (see the owner's notes below).
 - **Needs:** particles on the graphics card, glow, the spectrum. Built first, because it shows straight away whether the sound is being read correctly.
-- **As built (first version, 2026-10-03):**
-  - The peaks aren't the raw spectrum. Each part of it is measured against its own recent loudest moment, so there are separate mountains right across, as in the picture, and not one flat band.
+- **The owner's notes on the first version (2026-10-03):** "everything is just mushed together" in a busy passage; the colours were mixed, so the picture showed nothing about which part of the music was doing what; and the sparks were slow to come back to the line, so one beat ran into the next. They asked for the visual to be separated into colours the way the sound check is.
+- **As built (second version, 2026-10-03):**
+  - **One colour for each band,** the same six the sound check uses for its bars and meters. In the first version every part of the spectrum was pink low down and blue high up.
+  - **The peaks aren't the raw spectrum.** Each part of it is measured against its own recent loudest moment, so there are separate mountains right across and not one flat band. A pitch 5 decibels quieter than its neighbour stands half as tall.
+  - **Hits stand above held sound.** A sound that holds steady sinks to just over half its height, and one that has just jumped up stands at its full height. So in a busy passage the beats still show.
+  - **Quick up and quick down.** A hit's sparks are most of the way up within a twentieth of a second, and down to a fifth of their height three tenths of a second after the sound stops. In the first version, getting down that far took a full second.
   - A third of the sparks are the reflection, and a few float clear of the peaks.
   - One spark in eight is bright enough to be seen by itself; the rest make a mist.
   - Each kick's ripple runs along the line from the bass end.

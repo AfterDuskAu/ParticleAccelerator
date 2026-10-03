@@ -1,6 +1,7 @@
 import Foundation
 import Metal
 import Testing
+import simd
 
 @testable import ParticleAccelerator
 
@@ -25,62 +26,131 @@ private func settled(_ sound: SIMD64<Float>) -> SIMD64<Float> {
     #expect(settled(SIMD64<Float>(repeating: 0)) == SIMD64<Float>(repeating: 0))
 }
 
-@Test func oneStrongPitchMakesATriangularMountain() {
+/// A sound that holds steady stands at this share of its height.
+private let held = ParticleWave.Mountains.heldShare
+
+@Test func oneSteadyPitchMakesATriangularMountain() {
     let range = settled(bars([30: 1]))
-    // Full height at the pitch, sloping evenly down to nothing three and a half bars
-    // away on each side.
-    #expect(abs(range[30] - 1) < 0.01)
+    // As tall as a held sound stands at the pitch, sloping evenly down to nothing two
+    // and a half bars away on each side.
+    #expect(abs(range[30] - held) < 0.01)
     #expect(abs(range[29] - range[31]) < 0.001)
-    #expect(abs(range[31] - (1 - 1 / 3.5)) < 0.01)
-    #expect(abs(range[33] - (1 - 3 / 3.5)) < 0.01)
-    #expect(range[34] == 0 && range[26] == 0)
-    #expect(range[31] > range[32] && range[32] > range[33])
+    #expect(abs(range[31] - held * (1 - 1 / 2.5)) < 0.01)
+    #expect(abs(range[32] - held * (1 - 2 / 2.5)) < 0.01)
+    #expect(range[33] == 0 && range[27] == 0)
 }
 
 @Test func theHighsMakeMountainsOfTheirOwnBesideTheBass() {
     // A strong bass note, and a cymbal 16 decibels quieter (0.4 of the 40-decibel
     // range lower). Drawn as the spectrum stands, the cymbal would hardly show.
     let range = settled(bars([8: 1, 52: 0.6]))
-    #expect(abs(range[8] - 1) < 0.01)
-    #expect(range[52] > 0.95)
+    #expect(abs(range[8] - held) < 0.01)
+    #expect(range[52] > 0.95 * held)
     // And there's a valley between them.
     #expect(range[30] == 0)
 }
 
 @Test func withinOnePartOfTheSpectrumTheStrongerPitchStandsTaller() {
-    // Two pitches three bars apart, one 6 decibels quieter: half as tall.
-    let range = settled(bars([30: 1, 33: 0.85]))
-    #expect(abs(range[30] - 1) < 0.01)
-    #expect(abs(range[33] - 0.5) < 0.03)
+    // Two pitches three bars apart, one 5 decibels quieter: half as tall.
+    let range = settled(bars([30: 1, 33: 0.875]))
+    #expect(abs(range[30] - held) < 0.01)
+    #expect(abs(range[33] - held / 2) < 0.02)
 }
 
 @Test func faintHissDoesNotMakeMountains() {
     // 36 decibels below the song's peak: turned up only a little.
     let range = settled(bars([8: 1, 52: 0.1]))
-    #expect(range[52] < 0.3)
+    #expect(range[52] < 0.15)
 }
 
-@Test func aMountainClimbsAtOnceAndSinksSlowly() {
+@Test func aHitLeapsUpAndDropsStraightBack() {
     var mountains = ParticleWave.Mountains()
     var range = SIMD64<Float>(repeating: 0)
-    for _ in 0..<6 { range = mountains.update(bars: bars([30: 1]), seconds: 1.0 / 60) }
-    // A tenth of a second in, it's nearly all the way up.
+    for _ in 0..<3 { range = mountains.update(bars: bars([30: 1]), seconds: 1.0 / 60) }
+    // A twentieth of a second in, it's nearly all the way up.
     #expect(range[30] > 0.9)
     for _ in 0..<6 { range = mountains.update(bars: SIMD64<Float>(repeating: 0), seconds: 1.0 / 60) }
-    // A tenth of a second after the sound stops, it has only sunk part of the way.
-    #expect(range[30] > 0.5 && range[30] < 0.8)
+    // A tenth of a second after the sound stops it's well on its way down, and two
+    // tenths later it's all but gone: ready for the next beat.
+    #expect(range[30] < 0.45)
+    for _ in 0..<12 { range = mountains.update(bars: SIMD64<Float>(repeating: 0), seconds: 1.0 / 60) }
+    #expect(range[30] < 0.08)
+}
+
+@Test func aHitStandsAboveASoundThatHasBeenHolding() {
+    // A busy passage: a pitch that has been sounding for two seconds, and then a drum
+    // hit 10 decibels louder in the same place.
+    var mountains = ParticleWave.Mountains()
+    var range = SIMD64<Float>(repeating: 0)
+    for _ in 0..<120 { range = mountains.update(bars: bars([30: 0.75]), seconds: 1.0 / 60) }
+    #expect(abs(range[30] - held) < 0.02)
+    for _ in 0..<3 { range = mountains.update(bars: bars([30: 1]), seconds: 1.0 / 60) }
+    #expect(range[30] > 0.9)
+    // If the louder sound holds too, it settles back to where a held sound stands.
+    for _ in 0..<120 { range = mountains.update(bars: bars([30: 1]), seconds: 1.0 / 60) }
+    #expect(abs(range[30] - held) < 0.02)
+}
+
+@Test func aRepeatedHitLeapsEveryTime() {
+    // A kick every half second (120 beats a minute), each a twentieth of a second long.
+    var mountains = ParticleWave.Mountains()
+    var tallest: [Float] = []
+    var lowest: [Float] = []
+    for _ in 0..<6 {
+        var top: Float = 0
+        for frame in 0..<30 {
+            let range = mountains.update(bars: frame < 3 ? bars([10: 1]) : SIMD64<Float>(repeating: 0), seconds: 1.0 / 60)
+            top = max(top, range[10])
+            if frame == 29 { lowest.append(range[10]) }
+        }
+        tallest.append(top)
+    }
+    // Every kick reaches nearly full height, and the mountain is flat again before the
+    // next one.
+    #expect(tallest.allSatisfy { $0 > 0.9 }, "\(tallest)")
+    #expect(lowest.allSatisfy { $0 < 0.03 }, "\(lowest)")
 }
 
 @Test func thePartsOfTheSpectrumForgetOldPeaks() {
     // A loud passage, then a quieter one 12 decibels down in the same place. After a
-    // few seconds the quieter one stands at full height again.
+    // few seconds the quieter one stands as tall as the loud one did.
     var mountains = ParticleWave.Mountains()
     for _ in 0..<120 { _ = mountains.update(bars: bars([30: 1]), seconds: 1.0 / 60) }
     var range = SIMD64<Float>(repeating: 0)
     for _ in 0..<30 { range = mountains.update(bars: bars([30: 0.7]), seconds: 1.0 / 60) }
-    #expect(range[30] < 0.45)
+    #expect(range[30] < 0.2)
     for _ in 0..<300 { range = mountains.update(bars: bars([30: 0.7]), seconds: 1.0 / 60) }
-    #expect(range[30] > 0.95)
+    #expect(range[30] > 0.95 * held)
+}
+
+// MARK: The bands' sections and colours
+
+@Test func everyBarOfTheSpectrumBelongsToABand() {
+    // The band changes where the band's pitches begin: 60, 150, 500, 2,000 and 6,000 Hz.
+    #expect(Band.of(bar: 0) == .sub && Band.of(bar: 6) == .sub)
+    #expect(Band.of(bar: 7) == .kick && Band.of(bar: 15) == .kick)
+    #expect(Band.of(bar: 16) == .lowMids && Band.of(bar: 28) == .lowMids)
+    #expect(Band.of(bar: 29) == .mids && Band.of(bar: 42) == .mids)
+    #expect(Band.of(bar: 43) == .vocals && Band.of(bar: 53) == .vocals)
+    #expect(Band.of(bar: 54) == .air && Band.of(bar: 63) == .air)
+}
+
+@Test func everyBandHasAColourOfItsOwn() {
+    // No two are close: each differs from every other by a good step in at least one
+    // of red, green and blue.
+    for band in Band.allCases {
+        for other in Band.allCases where other != band {
+            let difference = simd_abs(band.colour - other.colour)
+            #expect(difference.max() > 0.25, "\(band) and \(other)")
+        }
+        // Light is the same colour, darker in number.
+        #expect(band.light.max() <= band.colour.max())
+    }
+    // The shaders are given all six, and the five places where one ends and the next
+    // begins, in order along the spectrum.
+    let source = ParticleWave.bandsSource
+    #expect(source.contains("waveBandLight[6]") && source.contains("waveBandEnds[5]"))
+    #expect(source.components(separatedBy: "float3(").count == 7)
 }
 
 // MARK: The sparks
@@ -143,20 +213,57 @@ func thePeaksRiseWhereTheMusicIs() throws {
 }
 
 @Test(.enabled(if: hasGraphicsCard, noGraphicsCard))
-func theLineIsBrighterWhenTheMusicIsLouder() throws {
+func eachSectionOfTheLineIsBrighterWhenItsOwnBandIsLouder() throws {
     // The line itself is already near the brightest a screen can show, so the light
-    // is measured in its glow: just above and below it, on the side of the spectrum
+    // is measured in its glow: just above and below it, in sections of the spectrum
     // where there are no peaks.
-    func glowBesideTheLine(loudness: Float) throws -> Double {
+    func glowBesideTheLine(vocals: Float) throws -> (vocals: Double, air: Double) {
         let stage = try TestStage()
-        stage.draw(frames: 180, reading: readingWithAPeak(loudness: loudness))
+        var reading = readingWithAPeak()
+        reading.bands.vocals = vocals
+        stage.draw(frames: 180, reading: reading)
         let frame = stage.lastFrame()
-        return frame.brightness(left: 0.65, top: 0.41, right: 0.9, bottom: 0.47)
-            + frame.brightness(left: 0.65, top: 0.53, right: 0.9, bottom: 0.59)
+        func glow(left: Double, right: Double) -> Double {
+            frame.brightness(left: left, top: 0.44, right: right, bottom: 0.485)
+                + frame.brightness(left: left, top: 0.515, right: right, bottom: 0.56)
+        }
+        return (glow(left: 0.70, right: 0.82), glow(left: 0.90, right: 0.98))
     }
-    let quiet = try glowBesideTheLine(loudness: 0)
-    let loud = try glowBesideTheLine(loudness: 1)
-    #expect(loud > quiet * 1.25, "quiet \(quiet), loud \(loud)")
+    let quiet = try glowBesideTheLine(vocals: 0)
+    let loud = try glowBesideTheLine(vocals: 1)
+    #expect(loud.vocals > quiet.vocals * 1.25, "quiet \(quiet), loud \(loud)")
+    // The section next to it, whose band hasn't changed, stays as it was.
+    #expect(loud.air < quiet.air * 1.1, "quiet \(quiet), loud \(loud)")
+}
+
+@Test(.enabled(if: hasGraphicsCard, noGraphicsCard))
+func eachSectionIsItsBandsColour() throws {
+    // Music right across the spectrum.
+    let stage = try TestStage()
+    var reading = SoundReading.silence
+    reading.bars = SIMD64<Float>(repeating: 1)
+    reading.loudness = 0.8
+    reading.seconds = 10
+    stage.draw(frames: 240, reading: reading)
+    let frame = stage.lastFrame()
+
+    // The middle of each band's section, above the line: of the six bands' colours,
+    // the one it's nearest to is its own.
+    let middles: [(Band, Double)] = [
+        (.sub, 0.05), (.kick, 0.18), (.lowMids, 0.35), (.mids, 0.56), (.vocals, 0.76), (.air, 0.93),
+    ]
+    for (band, middle) in middles {
+        let seen = frame.colour(left: middle - 0.03, top: 0.30, right: middle + 0.03, bottom: 0.46)
+        let hue = simd_normalize(SIMD3(Float(seen.red), Float(seen.green), Float(seen.blue)))
+        let nearest = Band.allCases.max {
+            simd_dot(hue, simd_normalize($0.colour)) < simd_dot(hue, simd_normalize($1.colour))
+        }
+        #expect(nearest == band, "\(band): saw \(seen)")
+    }
+    // And the bass end is red where the top end is green.
+    let bass = frame.colour(left: 0.02, top: 0.30, right: 0.08, bottom: 0.46)
+    let top = frame.colour(left: 0.90, top: 0.30, right: 0.96, bottom: 0.46)
+    #expect(bass.red > bass.green * 1.5 && top.green > top.red * 1.5, "bass \(bass), top \(top)")
 }
 
 @Test(.enabled(if: hasGraphicsCard, noGraphicsCard))

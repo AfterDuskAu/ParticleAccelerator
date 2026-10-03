@@ -2,14 +2,16 @@ import Foundation
 import Metal
 import simd
 
-/// Visualizer 3, Particle Wave (docs/VISUALS.md): a glowing orange-pink line across the
-/// middle, with tens of thousands of blue, violet and pink sparks forming peaks above
-/// it and a dimmer reflection below.
+/// Visualizer 3, Particle Wave (docs/VISUALS.md): a glowing line across the middle, with
+/// tens of thousands of sparks forming peaks above it and a dimmer reflection below.
 ///
 /// With the music:
 /// - The peaks are the spectrum, bass on the left and highs on the right.
-/// - Sparks ride their peaks with a little drift, then fall back and fade.
-/// - The line brightens and flickers with the loudness.
+/// - Each of the six bands has a section of its own, in the band's own colour: its
+///   sparks, its reflection and its piece of the line.
+/// - Sparks leap up their peaks on a hit and drop straight back, so one beat is over
+///   before the next lands.
+/// - Each section of the line brightens with its own band.
 /// - Each kick sends a ripple along the line from the bass end.
 final class ParticleWave: Visual {
     static let number = 3
@@ -26,8 +28,13 @@ final class ParticleWave: Visual {
     // How the music drives it. These are its built-in settings; the controls editor
     // (phase 8) will let them be changed.
     private var mountains = Mountains()
-    private var lineBrightness = LiveSignal(
-        SignalChain(source: .loudness, shape: SignalShape(low: 0.25, high: 1, steepness: 1.3, riseSeconds: 0.02, fallSeconds: 0.22)))
+    /// How brightly each band's section of the line glows.
+    private var bandGlow = Band.allCases.map { band in
+        LiveSignal(
+            SignalChain(
+                source: band.source,
+                shape: SignalShape(low: 0.15, high: 1, steepness: 1.3, riseSeconds: 0.02, fallSeconds: 0.15)))
+    }
     private var sparkle = LiveSignal(
         SignalChain(source: .air, shape: SignalShape(low: 0.2, high: 1, steepness: 1.2, riseSeconds: 0.02, fallSeconds: 0.18)))
     private var punch = LiveSignal(
@@ -72,12 +79,11 @@ final class ParticleWave: Visual {
         let seconds = Double(uniforms.seconds)
 
         uniforms.bars = mountains.update(bars: reading.bars, seconds: seconds)
-        uniforms.loudness = lineBrightness.update(reading, seconds: seconds)
         uniforms.beat = reading.beat
         uniforms.beatPhase = Float(reading.beatPhase)
-        uniforms.bands = SIMD8(
-            reading.bands.sub, reading.bands.kick, reading.bands.lowMids, reading.bands.mids,
-            reading.bands.vocals, reading.bands.air, 0, 0)
+        for band in Band.allCases {
+            uniforms.bands[band.rawValue] = bandGlow[band.rawValue].update(reading, seconds: seconds)
+        }
 
         // Each new beat starts a ripple.
         if reading.beatsHeard != beatsSeen {
@@ -105,7 +111,7 @@ final class ParticleWave: Visual {
         let halfWidth = halfHeight * uniforms.aspect
         uniforms.controls = SIMD8(
             halfWidth,  // 0: how far the spectrum reaches to each side
-            halfHeight * 0.80,  // 1: how high a full peak reaches
+            halfHeight * 0.88,  // 1: how high a full peak reaches
             0.0042,  // 2: half the line's thickness
             sparkle.update(reading, seconds: seconds),  // 3: how much the sparks twinkle
             Self.sparksTheBrightnessIsSetFor / Float(max(sparkCount, 1)),  // 4: each spark's share of the light
@@ -160,9 +166,14 @@ final class ParticleWave: Visual {
     /// peaks all the way across. So:
     /// 1. Each bar is measured against the loudest its own part of the spectrum has
     ///    been lately, so the highs make peaks of their own beside the bass.
-    /// 2. The result is on a plain loudness scale, where half as strong is half as
-    ///    tall, which makes the strong pitches stand clear of the rest.
-    /// 3. Each peak is spread sideways into a triangle, and neighbours join into a
+    /// 2. The strong pitches are made to stand well clear of the rest.
+    /// 3. A sound that holds steady sinks to part of its height, and only one that has
+    ///    just jumped up stands at its full height. In a busy passage everything is
+    ///    loud all the time, and without this the beats can't be seen in it (the
+    ///    owner, 2026-10-03: "everything is just mushed together").
+    /// 4. A peak climbs at once and drops back quickly, so that one beat is over before
+    ///    the next lands.
+    /// 5. Each peak is spread sideways into a triangle, and neighbours join into a
     ///    ridge.
     struct Mountains {
         /// The analyser's bars run from 0 to 1 over this many decibels.
@@ -174,13 +185,25 @@ final class ParticleWave: Visual {
         static let quietestTurnedUp: Float = -24
         /// How fast a part's "loudest lately" falls back, in decibels a second.
         static let forgetting: Float = 5
+        /// A pitch this many decibels quieter than the loudest nearby stands half as
+        /// tall.
+        static let decibelsToHalve: Float = 5
+        /// A sound that holds steady stands at this share of its height.
+        static let heldShare: Float = 0.55
+        /// A jump of this many decibels above where a bar has been sitting is a full
+        /// hit.
+        static let fullJump: Float = 8
+        /// "Where a bar has been sitting" follows the sound up slowly, so a hit stands
+        /// clear of it for a moment, and down quickly, so it's ready for the next hit.
+        static let settling = SignalShape(riseSeconds: 0.30, fallSeconds: 0.10)
         /// How far to each side a peak's triangle reaches, in bars.
-        static let footprint: Float = 3.5
-        /// A peak climbs at once and sinks slowly.
-        static let fade = SignalShape(riseSeconds: 0.03, fallSeconds: 0.22)
+        static let footprint: Float = 2.5
+        static let fade = SignalShape(riseSeconds: 0.012, fallSeconds: 0.10)
 
         /// The loudest each bar has been lately, in decibels below the song's peak.
         private var loudestLately = [Float](repeating: -barDecibels, count: SoundAnalyser.barCount)
+        /// Where each bar has been sitting, in the same decibels.
+        private var sittingAt = [Float](repeating: -barDecibels, count: SoundAnalyser.barCount)
         private var heights = [Float](repeating: 0, count: SoundAnalyser.barCount)
 
         mutating func update(bars: SIMD64<Float>, seconds: Double) -> SIMD64<Float> {
@@ -197,13 +220,20 @@ final class ParticleWave: Visual {
                 for near in max(0, bar - Self.neighbourhood)...min(count - 1, bar + Self.neighbourhood) {
                     loudestNearby = max(loudestNearby, loudestLately[near])
                 }
-                var height = pow(10, (decibels[bar] - loudestNearby) / 20)
+                var height = pow(0.5, (loudestNearby - decibels[bar]) / Self.decibelsToHalve)
                 // A bar at the very bottom of the analyser's range is silence.
                 height *= min(1, bars[bar] / 0.1)
+
+                // Step 3.
+                let jump = min(1, max(0, decibels[bar] - sittingAt[bar]) / Self.fullJump)
+                height *= Self.heldShare + (1 - Self.heldShare) * jump
+                sittingAt[bar] = Self.settling.fade(sittingAt[bar], towards: decibels[bar], seconds: seconds)
+
+                // Step 4.
                 heights[bar] = Self.fade.fade(heights[bar], towards: min(1, height), seconds: seconds)
             }
 
-            // Step 3.
+            // Step 5.
             var range = SIMD64<Float>(repeating: 0)
             let reach = Int(Self.footprint.rounded(.up))
             for bar in 0..<count {
@@ -266,15 +296,62 @@ final class ParticleWave: Visual {
 
     // MARK: The shaders
 
+    /// The six bands for the shaders: each one's colour as light, and where each ends
+    /// along the spectrum. Written out from `Band`, so the sections here and the sound
+    /// check's bars can't drift apart.
+    static let bandsSource: String = {
+        let lights = Band.allCases.map { band -> String in
+            let light = band.light
+            return "float3(\(light.x), \(light.y), \(light.z))"
+        }
+        // The shaders count along the spectrum from 0 at the middle of the first bar to
+        // 1 at the middle of the last.
+        let ends = Band.allCases.dropFirst().map { band -> String in
+            let place = Band.barPlace(ofHz: band.frequencies.lowerBound)
+            return "\((place - 0.5) / Float(SoundAnalyser.barCount - 1))"
+        }
+        return """
+            constant float3 waveBandLight[\(lights.count)] = { \(lights.joined(separator: ", ")) };
+            constant float waveBandEnds[\(ends.count)] = { \(ends.joined(separator: ", ")) };
+            """
+    }()
+
     static let shaderSource = """
         struct WaveSpark {
             float4 position;   // x, y, z, and age from 0 (born) to 1 (gone)
             float4 nature;     // sideways drift, lives so far, spare, its own number
         };
 
+        \(bandsSource)
+
+        // Which band a place along the spectrum is in, as a number from 0 (sub) to 5
+        // (air). It slides from one whole number to the next across each border, so
+        // the colours meet softly.
+        static float waveBandAt(float along) {
+            float band = 0.0;
+            for (int border = 0; border < 5; border++) {
+                band += smoothstep(-0.018, 0.018, along - waveBandEnds[border]);
+            }
+            return band;
+        }
+
+        // The colour of the band at a place along the spectrum.
+        static float3 waveColourAt(float along) {
+            float band = waveBandAt(along);
+            int lower = min(int(band), 4);
+            return mix(waveBandLight[lower], waveBandLight[lower + 1], band - float(lower));
+        }
+
+        // How loud the band at a place along the spectrum is, from 0 to 1.
+        static float waveBandLevelAt(constant StageUniforms &stage, float along) {
+            float band = waveBandAt(along);
+            int lower = min(int(band), 4);
+            return mix(stage.bands[lower], stage.bands[lower + 1], band - float(lower));
+        }
+
         // What kind of spark this is, from its own number.
         static bool waveIsReflection(float own) { return chance(own * 13.37) < 0.34; }
-        static bool waveIsStray(float own) { return chance(own * 13.37) > 0.945; }
+        static bool waveIsStray(float own) { return chance(own * 13.37) > 0.97; }
 
         // Moves every spark on by one frame.
         kernel void waveMoveSparks(device WaveSpark *sparks [[buffer(0)]],
@@ -307,19 +384,21 @@ final class ParticleWave: Visual {
             float peak = spectrumAt(stage, along);
 
             // Most sparks sit low on their peak, and fewer near its top.
-            float share = pow(chance(own * 57.3 + 0.5), 1.9);
+            float share = pow(chance(own * 57.3 + 0.5), 1.5);
             float target = share * (peak * reach + 0.03);
             if (waveIsStray(own)) {
-                // A few float well clear of the peaks.
-                target = (0.2 + share * 1.5) * (0.10 + peak * 0.55) * reach * 1.6;
+                // A few float clear of the peaks.
+                target = (0.2 + share * 1.5) * (0.06 + peak * 0.55) * reach * 1.3;
             }
             // Near the end of its life a spark lets go and falls back.
             target *= 1.0 - smoothstep(0.70, 1.0, age);
             if (waveIsReflection(own)) target *= -0.85;
 
-            // Quick to climb, slow to fall.
+            // It leaps up, since a drum hit is over in a twentieth of a second, and
+            // drops back quickly: a spark still in the air when the next beat lands
+            // blurs the two beats into one.
             float height = spark.position.y;
-            float pull = fabs(target) > fabs(height) ? 10.0 : 2.3;
+            float pull = fabs(target) > fabs(height) ? 28.0 : 9.0;
             height += (target - height) * (1.0 - exp(-pull * stage.seconds));
 
             // A little drift of its own, more where the music is strong.
@@ -365,16 +444,13 @@ final class ParticleWave: Visual {
             out.size = shown;
             float spread = (pixels * pixels) / (shown * shown);
 
-            // Pink by the line, violet higher, blue at the top.
-            float3 pink = float3(1.00, 0.10, 0.52);
-            float3 violet = float3(0.52, 0.13, 1.00);
-            float3 blue = float3(0.09, 0.24, 1.00);
+            // The colour of the band it's in. Each is a little paler or deeper than
+            // its neighbours, and the big ones are pale.
+            float along = spark.position.x / max(stage.controls[0], 0.001) * 0.5 + 0.5;
+            float3 colour = waveColourAt(along);
+            colour = mix(colour, float3(1.0), 0.22 * chance(own * 71.3));
+            if (big) colour = mix(colour, float3(1.0), 0.4);
             float high = saturate(fabs(spark.position.y) / reach);
-            float3 colour = mix(pink, violet, smoothstep(0.05, 0.45, high));
-            colour = mix(colour, blue, smoothstep(0.40, 0.95, high));
-            // Each leans a little its own way, and the big ones are light blue.
-            colour = mix(colour, blue, 0.4 * chance(own * 71.3));
-            if (big) colour = float3(0.22, 0.50, 1.00);
 
             float fade = smoothstep(0.0, 0.10, age) * (1.0 - smoothstep(0.72, 1.0, age));
             float twinkle = 1.0 + (0.35 + 0.9 * twinkling)
@@ -389,10 +465,7 @@ final class ParticleWave: Visual {
             bright *= mix(0.3, 1.0, smoothstep(0.0, 0.07, high));
             if (big) bright *= 0.35;
             if (waveIsStray(own)) bright *= 0.8;
-            if (waveIsReflection(own)) {
-                colour = mix(colour, blue, 0.45);
-                bright *= 0.45;
-            }
+            if (waveIsReflection(own)) bright *= 0.45;
             out.light = half3(colour * bright);
             return out;
         }
@@ -439,10 +512,11 @@ final class ParticleWave: Visual {
             out.position = stage.viewProjection * float4(x, height + side * thickness, 0.0, 1.0);
             out.across = side;
 
-            // Orange-pink, brighter and flickering with the loudness.
+            // Its band's colour, brighter and flickering as that band gets louder.
             float flicker = 0.85 + 0.15 * sin(stage.time * 31.0 + x * 7.0) * sin(stage.time * 17.3);
-            float bright = (0.55 + 6.0 * stage.loudness) * flicker * (1.0 + 0.6 * peak);
-            float3 colour = haze ? float3(1.00, 0.16, 0.50) * 0.035 : float3(1.00, 0.40, 0.16);
+            float level = waveBandLevelAt(stage, onSpectrum);
+            float bright = (0.55 + 6.0 * level) * flicker * (1.0 + 0.6 * peak);
+            float3 colour = waveColourAt(onSpectrum) * (haze ? 0.05 : 1.0);
             out.light = half3(colour * bright);
             return out;
         }
