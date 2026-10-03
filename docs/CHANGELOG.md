@@ -85,7 +85,7 @@
 - **The host's way:** the made-up song as a joined composition, silent, read 124 BPM.
 - **This Mac's sound:** heard the music the owner was playing, found its tempo, and showed its loudness.
 - **The microphone:** heard the room through the Mac's own microphone, at about −64 decibels.
-- **The permission with this ad-hoc-signed app:** after the app was rebuilt (which changes its signature) the Mac's sound was heard again within a second and a half, with nothing lost. Whether macOS showed its prompt the first time couldn't be seen from here.
+- **The permission with this ad-hoc-signed app:** macOS asks again after every rebuild. The owner was asked to allow about four times in the session, across two builds and two sources. A rebuild changes an ad-hoc signature, so macOS treats the rebuilt app as a new one. Signing with a lasting certificate would stop that; it isn't set up. (This entry first said the permission survived a rebuild. That was wrong: the prompts couldn't be seen from Claude's side, and the owner had allowed each one.)
 
 **Measured (2026-10-03):**
 
@@ -115,3 +115,10 @@
   - a player playing faster or slower than normal
 
 **A lesson about tests that play in real time.** All the tests start together, and for the first five or six seconds the ones that measure long stretches of sound keep every worker thread busy. Until they finish, macOS can't deliver timers or a player's callbacks: a 20 ms wait was seen to last six seconds, on the main thread's own timer too. A test that plays three seconds of sound then misses all of it. So each real-time test calls `waitForAQuietMoment()` first, and waits with `pause(seconds:)` instead of `Task.sleep`.
+
+### Decisions after phase 1
+
+2026-10-03.
+
+- **Menus show a visual by its number only**, such as "Visualizer 3" (the owner's choice, for now). `VisualInfo.title` changed to match; `name` is still there for the docs.
+- **The flashing limit** is still to be settled. The owner leans towards off by default with a setting to turn it on. `CLAUDE.md` rule 8 says on by default, so the rule stands until the owner says to change it.

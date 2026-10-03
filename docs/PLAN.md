@@ -26,7 +26,7 @@ The owner asked whether to build it in Unreal Engine, the game engine Vizibeat r
 All four feed the same analyser, so every visual works with every source.
 
 1. **A song file**, dropped on the window or opened from the menu. Played by the app itself.
-2. **Whatever the Mac is playing** (Spotify, a browser, Music Organizer). This uses Core Audio's process taps, in macOS 14.2 and later. macOS asks once for permission ("Screen & System Audio Recording"). Checked in phase 1 with this ad-hoc-signed app: the permission survives a rebuild.
+2. **Whatever the Mac is playing** (Spotify, a browser, Music Organizer). This uses Core Audio's process taps, in macOS 14.2 and later. macOS asks for permission ("Screen & System Audio Recording"). Checked in phase 1 with this ad-hoc-signed app: macOS asks again after every rebuild, because a rebuild changes the app's signature. An app signed with a lasting certificate would be asked once.
 3. **A microphone or line input**, for a room, a turntable, a band. A Bluetooth headset is passed over for the Mac's own microphone, because listening to one drops it to call quality.
 4. **A host app's `AVPlayer`** (Music Organizer): a listening tap on the item it plays. It works on files and joined compositions such as the one used for YouTube (proven in phase 1 with a test player), but not on HLS streams.
 
@@ -115,6 +115,6 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 ## Decisions waiting for the owner
 
 1. ~~Public or private on GitHub?~~ **Public** (owner, 2026-10-03): github.com/AfterDuskAu/ParticleAccelerator.
-2. **Names in menus:** "3 · Particle Wave" (number and name, as built) or numbers only?
-3. **The flashing limit, on by default?** Suggested: yes.
+2. ~~Names in menus?~~ **Numbers only for now** (owner, 2026-10-03): "Visualizer 3". The names can come into the menus later, once more visuals are built.
+3. **The flashing limit, on by default?** Suggested: yes. The owner leans towards off for now, with a setting to limit flashing (2026-10-03). `CLAUDE.md` rule 8 says on by default, so the rule stands until the owner says to change it. Nothing flashes yet: the limit is built with the stage in phase 2.
 4. ~~Two more of Apple's frameworks?~~ **Yes** (owner, 2026-10-03): AudioToolbox and MediaToolbox are in `CLAUDE.md` rule 2, and another of Apple's frameworks may be added when the work needs it.

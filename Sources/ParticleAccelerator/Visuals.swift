@@ -7,12 +7,15 @@ public enum Accelerator {
 public struct VisualInfo: Identifiable, Hashable, Sendable {
     /// Given in the order the reference pictures arrived (docs/VISUALS.md), never reused.
     public let number: Int
+    /// What the visual is called in the docs. Menus don't show it yet (see `title`).
     public let name: String
     /// False until it's built: menus list it as coming.
     public let isBuilt: Bool
 
     public var id: Int { number }
-    public var title: String { "\(number) · \(name)" }
+    /// What menus show: the number only for now, such as "Visualizer 3". The names can
+    /// come into the menus later, once more visuals are built (owner, 2026-10-03).
+    public var title: String { "Visualizer \(number)" }
 }
 
 /// Every visual, built or planned, in number order.

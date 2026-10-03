@@ -10,6 +10,8 @@ import Testing
     #expect(Visuals.all.allSatisfy { !$0.name.isEmpty })
 }
 
-@Test func aTitleIsTheNumberAndTheName() {
-    #expect(Visuals.all[0].title == "1 · Ring & Ink")
+@Test func menusShowAVisualByItsNumberOnly() {
+    #expect(Visuals.all[0].title == "Visualizer 1")
+    #expect(Visuals.all[2].title == "Visualizer 3")
+    #expect(Visuals.all[2].name == "Particle Wave")
 }

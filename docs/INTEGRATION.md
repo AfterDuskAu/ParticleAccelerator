@@ -44,7 +44,7 @@ Three things a host should know about its player:
 
 Optional extras for a host that wants its own menus:
 
-- `Visuals.all`: every visual's number and name, for a picker.
+- `Visuals.all`: every visual's number and name, for a picker. Its `title` is what menus show: the number only for now ("Visualizer 3").
 - `AcceleratorControls(settings: $settings)`: the library's own settings panel, ready to drop into the host's Settings.
 
 ## What the library promises a host
@@ -75,3 +75,4 @@ The API is still a plan until version 1.0.0, and these may change before then.
   - `MusicListener.source` (a `MusicListener.Source`), `sourceName` and `problem`.
   - `MusicListener.timingOffset`: shows the visuals up to half a second later or earlier.
   - A host that uses `listenToThisMac()` or `listenToMicrophone()` needs `NSAudioCaptureUsageDescription` or `NSMicrophoneUsageDescription` in its Info.plist. Listening to its own player needs neither.
+- **0.1.0, 2026-10-03, changed:** `VisualInfo.title` is now the number only ("Visualizer 3"), not the number and name ("3 · Particle Wave"). `name` is unchanged.
