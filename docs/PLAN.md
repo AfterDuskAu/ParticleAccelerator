@@ -116,5 +116,5 @@ Every visual comes with good settings, and the controls editor (phase 8) lets th
 
 1. ~~Public or private on GitHub?~~ **Public** (owner, 2026-10-03): github.com/AfterDuskAu/ParticleAccelerator.
 2. ~~Names in menus?~~ **Numbers only for now** (owner, 2026-10-03): "Visualizer 3". The names can come into the menus later, once more visuals are built.
-3. **The flashing limit, on by default?** Suggested: yes. The owner leans towards off for now, with a setting to limit flashing (2026-10-03). `CLAUDE.md` rule 8 says on by default, so the rule stands until the owner says to change it. Nothing flashes yet: the limit is built with the stage in phase 2.
+3. ~~The flashing limit, on by default?~~ **On by default, and a setting turns it off** (owner, 2026-10-03). It's built with the stage in phase 2.
 4. ~~Two more of Apple's frameworks?~~ **Yes** (owner, 2026-10-03): AudioToolbox and MediaToolbox are in `CLAUDE.md` rule 2, and another of Apple's frameworks may be added when the work needs it.

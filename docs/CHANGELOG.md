@@ -121,4 +121,4 @@
 2026-10-03.
 
 - **Menus show a visual by its number only**, such as "Visualizer 3" (the owner's choice, for now). `VisualInfo.title` changed to match; `name` is still there for the docs.
-- **The flashing limit** is still to be settled. The owner leans towards off by default with a setting to turn it on. `CLAUDE.md` rule 8 says on by default, so the rule stands until the owner says to change it.
+- **The flashing limit is on by default, and a setting turns it off** (the owner's choice). `CLAUDE.md` rule 8 now says so. It's built with the stage in phase 2.

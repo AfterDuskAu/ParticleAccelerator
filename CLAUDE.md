@@ -25,7 +25,7 @@ The owner builds with Claude Code and is not a professional programmer. Prefer b
    - Nothing makes the drawing wait on the main thread.
    - Drawing stops when the view is hidden.
 7. **Shaders are Metal source kept as text in Swift files, compiled when the stage starts.** `swift build` doesn't compile `.metal` files (checked 2026-10-03), and the app bundle has no resource folder. A test compiles every shader.
-8. **Flashing is limited.** Whole-screen flashes happen at most 3 times a second, on by default, for people sensitive to flashing light.
+8. **Flashing is limited.** Whole-screen flashes happen at most 3 times a second, on by default, for people sensitive to flashing light. A setting turns the limit off.
 9. **The reference pictures belong to other people.** They live in `references/`, which is git-ignored, and `scripts/check_secrets.py` refuses them. Never commit them, and never copy a picture's logos or artwork into a visual: the visuals are drawn by code in a similar style.
 
 ## Architecture
