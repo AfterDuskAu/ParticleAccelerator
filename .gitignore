@@ -1,0 +1,29 @@
+# Swift
+.build/
+.swiftpm/
+build/
+*.xcodeproj
+xcuserdata/
+
+# The reference pictures belong to other people: kept on the owner's Mac only.
+# (scripts/check_secrets.py refuses them too.)
+references/
+
+# Audio and video: test sounds are made while the tests run, never committed.
+*.mp3
+*.m4a
+*.aac
+*.wav
+*.aif
+*.aiff
+*.flac
+*.opus
+*.ogg
+*.mp4
+*.mov
+
+# macOS and Windows junk
+.DS_Store
+._*
+Thumbs.db
+desktop.ini

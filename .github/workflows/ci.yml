@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    # Backstop for the local pre-commit/pre-push hooks: every tracked file and every
+    # commit ever made. Findings are printed mostly hidden, because this log is public.
+    name: secret check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: python3 scripts/check_secrets.py --all
+      - run: python3 scripts/check_secrets.py --history
+
+  test:
+    # An Intel Mac (like the owner's iMac) and an Apple Silicon one.
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: swift build
+        run: swift build
+      - name: swift test
+        run: swift test

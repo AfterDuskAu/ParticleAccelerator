@@ -1,0 +1,12 @@
+#!/bin/sh
+# Refuses a push whose commits contain keys, passwords, login cookies or emails, in files,
+# messages or author details. That includes ones added and then deleted again, since the
+# history stays public.
+root="$(git rev-parse --show-toplevel)"
+for py in python3 python py; do
+    if command -v "$py" >/dev/null 2>&1; then
+        exec "$py" "$root/scripts/check_secrets.py" --push
+    fi
+done
+echo "Secret check: Python wasn't found, so the check couldn't run. Push blocked." >&2
+exit 1
