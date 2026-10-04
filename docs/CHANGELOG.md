@@ -434,3 +434,31 @@ What was added:
 - **A standard set with the button can't be undone** except by setting another. Reset All still reaches the base, and the library's own standard comes back if the app's settings are cleared.
 - **In Visualizer 7, heavy curl still mixes the bands.** Each strand is lit by its own bars wherever the current has carried its sparks, so the colours still pulse with their bands, but the shape round the hole is lost.
 - **Auto quality** still doesn't adapt, and the flashing limit still isn't built.
+
+### The owner's standards for Visualizers 5, 7 and 8
+
+2026-10-04, afternoon. The owner tuned Visualizers 7 and 8, unlocked Visualizer 5 and tuned it again, pressed Set Standard on each, and asked for the three in Music Organizer. A standard set with the button is kept only in the app's settings, so it wouldn't have reached Music Organizer. Asked, the owner chose to have the three written into the library.
+
+- **Visualizer 5's standard is replaced** (`Fountain.standard`): a tall spray of small, very bright, long-lived sparks with streaks, bigger bursts on the kick, hardly any glow on the floor, a camera that barely jumps on the beat, and colours that stay as they are. The standard locked in that morning (a wide spray of fewer sparks, a camera that moved a lot, colours that changed by themselves) is gone from the library; it's in this changelog's entry above and in git.
+- **Visualizers 7 and 8 have standards of their own** (`Corona.standard`, `Jets.standard`). They no longer start as their originals do.
+  - **7:** four times the strands, finer and brighter, reaching far with bright tips; small tight curls, a small hole, a ring that turns; a strong push from the bass; bars that move with their neighbours and let go quickly; colours that stay as they are.
+  - **8:** eight jets for each band in a narrow row, fanned wide; many small twinkling sparks that rise and fall slowly, last long and leave long streaks; no glow on the floor; a camera that hardly moves.
+- **Each value is the owner's own, to what the panel shows:** two decimal places, and three for anything under 0.1. The values came from what the owner's app had saved, read through the library's own code, not from a screenshot.
+- **Visualizer 5 still starts locked.** Visualizers 7 and 8 aren't locked: the owner didn't ask for that.
+- **Tests** (`StandardsTests`):
+  - What the owner's app had saved that afternoon opens with every control of the three reading the same as the library's standard, and the same as for a person with nothing saved.
+  - Each of the three standards, control by control, as the panel shows it.
+  - The morning's saved settings still open: Visualizer 4 at its standard, and Visualizer 5's sliders of the morning as changes from its new one.
+  - The test that Visualizers 7 and 8 start as their originals do is replaced by one that they have standards of their own.
+- **Measured** (`OUTPUT.md`, "That afternoon"), off screen with a made-up loud reading: at High on the iMac, Visualizer 5 now takes 5.9 ms a frame, Visualizer 7 9.4 ms and Visualizer 8 17.9 ms; at Medium, 2.4, 3.2 and 4.4 ms. Not measured: flashing, and the frame times in the app with a real song.
+- **Music Organizer has the three** (2026-10-04): it pins this commit, shows them at Medium, and Visualizer 7 is the one it shows until another is chosen (`INTEGRATION.md`). No public API changed.
+
+**Changes from the plan, and why:**
+
+- **A locked-in visual was retuned.** The rule is that it isn't, without the owner's say. This was the owner's own doing (they unlocked it and set the standard) and their say (asked which should be in the library, they chose theirs).
+- **Nobody watched these three for this entry.** The looks are the owner's own, made in the running app with the frame-time counter showing. What was checked here is that the library's numbers read the same as theirs, and the frame times above.
+
+**Known limits:**
+
+- **Visualizer 8 at its standard doesn't hold 60 fps at High on the iMac** (17.9 ms a frame, with frames of 40 ms). It does at Medium (4.4 ms), which is the quality the owner tuned it at. Rule 5 asks for High. It's left as the owner set it; turning down Amount or Streaks, or Auto quality that adapts, would bring it back under.
+- **The owner's app still has its own copies of these standards** (Set Standard keeps them in its settings). They read the same as the library's now, so nothing shows; if the library's standard for one of the three changes later, the app goes on showing the owner's saved one until they press Set Standard again or reset it.

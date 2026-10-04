@@ -2,7 +2,7 @@
 
 Visuals that move with the music, for the Mac. Particles, light, ink and 3D shapes are driven live by the real sound of a song file, whatever the Mac is playing, or a microphone. It works on an older Intel iMac and scales up to a Mac Studio on a 4K or 6K screen.
 
-**Status:** early (version 0.1.0). Six visuals are on screen: Visualizer 3 (Particle Wave) in its second version; Visualizers 4 and 5, tuned by the owner; and base designs of Visualizers 6, 7 and 8 for the owner to shape. It moves to a song file, to whatever the Mac is playing, or to a microphone. A controls panel (View → Controls) changes the chosen visual's settings and colours while it plays, and each visual has a standard to go back to and a lock. See [`docs/PLAN.md`](docs/PLAN.md).
+**Status:** early (version 0.1.0). Six visuals are on screen: Visualizer 3 (Particle Wave) in its second version; Visualizers 4, 5, 7 and 8, tuned by the owner; and a base design of Visualizer 6 for the owner to shape. It moves to a song file, to whatever the Mac is playing, or to a microphone. A controls panel (View → Controls) changes the chosen visual's settings and colours while it plays, and each visual has a standard to go back to and a lock. See [`docs/PLAN.md`](docs/PLAN.md).
 
 ## The visuals
 
@@ -14,8 +14,8 @@ Visuals that move with the music, for the Mac. Particles, light, ink and 3D shap
 | 4 | Tendrils | tuned by the owner; its standard is set |
 | 5 | Fountain | tuned by the owner and locked in |
 | 6 | Starburst | second base design built |
-| 7 | Corona | base design built (Visualizer 4, laid out by band) |
-| 8 | Jets | base design built (Visualizer 5, laid out by band) |
+| 7 | Corona | tuned by the owner; its standard is set (Visualizer 4, laid out by band) |
+| 8 | Jets | tuned by the owner; its standard is set (Visualizer 5, laid out by band) |
 
 What each one looks like and how it moves: [`docs/VISUALS.md`](docs/VISUALS.md).
 
@@ -61,7 +61,7 @@ scripts/make_test_song.sh
 
 ## In another app
 
-Particle Accelerator is a Swift package. Another Mac app adds it with one line in `Package.swift` and shows it with one view. See [`docs/INTEGRATION.md`](docs/INTEGRATION.md). Music Organizer is the first.
+Particle Accelerator is a Swift package. Another Mac app adds it with one line in `Package.swift` and shows it with one view. See [`docs/INTEGRATION.md`](docs/INTEGRATION.md). Music Organizer is the first: it has shown Visualizers 5, 7 and 8 since 2026-10-04.
 
 ## Docs
 

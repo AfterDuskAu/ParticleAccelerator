@@ -85,6 +85,25 @@ Three of the four would hold 60 fps at 4K; Visualizer 3's busiest frames wouldn'
 - **Visualizer 7 is the cheapest** (2.1 ms): the unlit part of each strand isn't drawn at all.
 - **In the app,** High, with the made-up test song: 60 fps for each, and 2.1 ms (Visualizer 7), 3.4 ms (8), 7.1 ms (5) and 9.5 ms (6, with the owner's settings; slowest 14.4) on the graphics card. Visualizer 6 with long streaks is the one nearest the 16.7 ms a frame allows.
 
+**That afternoon the owner set new standards for Visualizers 5, 7 and 8** (`VISUALS.md`), and they were measured before they went into the library. This time not with a song but with a made-up reading (every bar at the same level, a kick every half second), ten seconds drawn off screen and the last two averaged, each standard beside the one it replaces. The Mac was busy again (other projects were building: Visualizer 3 at High measured 6.0 ms).
+
+| | 5, before | 5, now | 7, before | 7, now | 8, before | 8, now |
+|---|---|---|---|---|---|---|
+| Medium, loud (bars at 0.8) | 3.1 ms | 2.4 ms | 1.3 ms | 3.2 ms | 1.6 ms | 4.4 ms (slowest 7.7) |
+| Medium, quieter (bars at 0.45) | 2.7 ms | 2.0 ms | 1.6 ms | 3.7 ms | 1.9 ms | 4.7 ms (slowest 7.7) |
+| High, loud | 12.8 ms (slowest 37.0) | 5.9 ms (slowest 8.6) | 2.5 ms | 9.4 ms (slowest 11.3) | 3.3 ms | **17.9 ms (slowest 39.6)** |
+| High, quieter | 9.0 ms (slowest 24.4) | 4.2 ms (slowest 7.1) | 2.5 ms | 8.2 ms (slowest 10.8) | 3.8 ms | **18.9 ms (slowest 46.0)** |
+
+- **Visualizer 8 as the owner has it doesn't hold 60 fps at High on the iMac.** A frame allows 16.7 ms and it takes about 18, with frames of 40 ms and more. The likely reason, from its settings (not measured apart): nearly four times the sparks in the air (amount 3.74×), which last as long as they can, each leaving the longest streak (4×), so far more pixels are lit. At Medium it takes 4.5 ms.
+  - The owner tuned it with the quality at Medium, so that's the picture they chose, and it was smooth for them.
+  - It breaks rule 5 ("60 fps on the iMac at High") as a standard. It's left as the owner set it, and written up as a known limit in the changelog. Auto quality, which on the iMac still means High and still doesn't adapt, would show it dropping frames.
+  - Music Organizer shows these three at Medium for this reason (`INTEGRATION.md`).
+- **Visualizer 7 costs about four times what it did** (9.4 ms against 2.5 at High). It still holds 60 fps at High.
+- **Visualizer 5 costs less than it did** at High: 5.9 ms, against 12.8 for the morning's standard in this run and 7.7 in the earlier one (its camera moved a lot, so its cost came and went).
+- A run a few minutes earlier, with the Mac busier still, gave the same picture for the new standards: Visualizer 8 at High 18.4 ms (slowest 41.9), Visualizer 7 8.8 ms, Visualizer 5 5.9 ms. At Ultra, 95.9, 45.0 and 34.8 ms.
+- **Flashing wasn't measured again** for the new standards.
+- These aren't the table above's numbers over again: a made-up reading keeps every part of the picture busy at once, which a song doesn't. The comparison is between the columns here.
+
 **How a spark is drawn** was measured two ways (Visualizer 3, High): as one square of pixels with its shape worked out inside, 4.5 ms; as a four-cornered patch lying along its streak, which wastes no pixels, 7.4 ms. Drawing four corners for every spark costs more than the pixels saved, so it's one square, and streaks are kept short (at most 2% of the picture's height).
 
 **Flashing** (the biggest swing in the whole picture's brightness within a third of a second, where 10% or more counts as a flash): Visualizer 3, 8%; Tendrils, 3%; Fountain, 3%; Starburst, 4%. Measured again later that day: Visualizer 3, 5%; Tendrils at the owner's standard, 1%; Fountain at the owner's standard, 5%; Starburst's second design, 5% (6% with the owner's settings); Corona, 7% at its base and 5% at its standard; Jets, 6% and 4%.

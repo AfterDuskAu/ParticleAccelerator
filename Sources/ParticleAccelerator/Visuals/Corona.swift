@@ -266,17 +266,19 @@ final class Corona: Visual {
             Control.common.glow, Control.common.brightness, Control.common.darkCorners,
         ]
 
-    /// It starts as the owner's Visualizer 4 does (`Tendrils.standard`, 2026-10-04) in
-    /// everything the two share but two: slow sparks, a bigger hole, trails so short
-    /// the strands show as beads, a camera that moves a lot, and colours that change by
-    /// themselves. The two are Curl and Turning, which the owner has turned right up in
-    /// Visualizer 4. Here they stay at their base, because they're what mixes one
-    /// band's strands in with the next's.
+    /// The owner's standard (2026-10-04). It began as their Visualizer 4's
+    /// (`Tendrils.standard`), and that afternoon they tuned it for itself: four times
+    /// as many strands, finer and brighter, reaching far with bright tips; small,
+    /// tight curls; a small hole and a ring that turns; a strong push from the bass;
+    /// bars that move with their neighbours and let go quickly; a camera that moves a
+    /// lot; and colours that stay as they are. Anything not listed is at its base.
     static let standard: [String: Float] = [
-        "speed": 0.47, "bassPush": 1.26, "curlSize": 2.07, "holeSize": 1.77,
-        "trail": 0.05, "thickness": 0.90, "strandBrightness": 0.75,
-        "cameraMovement": 4, "beatPunch": 0.60,
-        BandPalette.changesKey: 1, BandPalette.secondsKey: 4.68,
+        "reach": 1.71, "tips": 3.71,
+        "quietPitches": 4.42, "heldSound": 0.86, "responseWidth": 8, "fall": 0.052,
+        "speed": 1.03, "bassPush": 3.30, "curl": 1.84, "curlSize": 0.31, "turning": 1.06, "holeSize": 0.81,
+        "strands": 4, "trail": 0.14, "thickness": 0.76, "strandBrightness": 1.68, "twinkle": 0.98,
+        "cameraMovement": 4, "beatPunch": 1.60,
+        BandPalette.secondsKey: 4.68,
     ]
 
     // MARK: The sparks

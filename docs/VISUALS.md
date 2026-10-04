@@ -10,10 +10,10 @@ The pictures are references only. Each visual is drawn by code in the same style
 | 2 | Iron Maw | a stylised version | ★★★★★ | planned |
 | 3 | Particle Wave | close in shape; the colours are ours | ★★ | second version built 2026-10-03, after the owner's first notes; waiting for their notes on it |
 | 4 | Tendrils | close in motion; the colours are ours | ★★★★ | base design built 2026-10-04; the owner tuned it and set its standard the same day |
-| 5 | Fountain | very close | ★ | base design built 2026-10-04; the owner tuned it and locked it in the same day |
+| 5 | Fountain | very close | ★ | base design built 2026-10-04; the owner tuned it and locked it in the same day, then tuned it again that afternoon and set a new standard |
 | 6 | Starburst | a firework from the centre, at the owner's direction | ★★★ | second base design built 2026-10-04, after the owner's notes on the first; for the owner to tune |
-| 7 | Corona | ours: Visualizer 4 laid out by band | ★★★★ | base design built 2026-10-04, at the owner's request; for the owner to tune |
-| 8 | Jets | ours: Visualizer 5 laid out by band | ★★ | base design built 2026-10-04, at the owner's request; for the owner to tune |
+| 7 | Corona | ours: Visualizer 4 laid out by band | ★★★★ | base design built 2026-10-04, at the owner's request; the owner tuned it and set its standard the same day |
+| 8 | Jets | ours: Visualizer 5 laid out by band | ★★ | base design built 2026-10-04, at the owner's request; the owner tuned it and set its standard the same day |
 
 **A base design** is a first version with every setting on a slider (View → Controls), built so the owner can shape it themselves. It isn't marked built until they're happy with it.
 
@@ -21,7 +21,7 @@ The pictures are references only. Each visual is drawn by code in the same style
 
 - **Its base:** the plain first setting the visual was designed with. **Reset All** goes back to it.
 - **Its standard:** what the visual shows until someone changes it. **Reset to Standard** goes back to it, and **Set Standard** makes the settings as they are now the standard.
-- A visual whose standard the owner has settled has it written into the library (`Fountain.standard`, `Tendrils.standard`), so it looks the same in any app. A standard set with the button is kept in that person's settings.
+- A visual whose standard the owner has settled has it written into the library (`Tendrils.standard`, `Fountain.standard`, `Corona.standard`, `Jets.standard`), so it looks the same in any app. A standard set with the button is kept in that person's settings.
 - **Lock** keeps a visual as it is: nothing in its panel can be moved until it's unlocked. Visualizer 5 starts locked.
 - Each visual has its own colours, and they're part of its standard.
 
@@ -114,7 +114,8 @@ The pictures are references only. Each visual is drawn by code in the same style
   - **Each spark is a band's colour.** The stronger a band is as a spark is thrown, the more of the sparks are its colour, so the spray's colours show what's playing.
   - A glow lies on the floor and stands at the mouth, and both pulse with the loudness and the kick.
 - **Its controls:** Spray (height, spread, amount, kick burst, gravity, life), Sparks (size, brightness, twinkle, white heat, streaks), Floor glow, Movement, Picture, Colours.
-- **The owner's standard (2026-10-04), locked in:** a wide, quick spray (spread 3.5×, gravity 3×, height 1.37×) of fewer, brighter, twinkling sparks (amount 0.43×, brightness 2.74×, twinkle 1.93×) that last twice as long. A camera that moves a lot (4×), a darker picture with less glow, and colours that change by themselves, a new set every 4.68 s. Its panel starts locked.
+- **The owner's standard (2026-10-04, afternoon):** a tall spray (height 1.24×, spread 1.56×, gravity 3×) of small, very bright, twinkling sparks (size 0.65×, brightness 4×, twinkle 1.93×) that last as long as they can (life 2.5×), hardly white at all (white heat 3%), with streaks (1.39×) and bigger bursts on the kick (2.16×). Hardly any glow on the floor (0.17×). A camera that drifts as at its base (1.10×) and barely jumps on the beat (0.21×), a darker picture with less glow, and colours that stay as they are. Its panel starts locked.
+  - This replaces the standard the owner locked in that morning (a wide spray of fewer sparks, spread 3.5× and amount 0.43×, a camera that moved a lot, and colours that changed by themselves). They unlocked it, tuned it again and pressed Set Standard, then asked for it to be the library's.
 
 ## 6. Starburst ★★★
 
@@ -145,7 +146,8 @@ The pictures are references only. Each visual is drawn by code in the same style
   - **It does that at once.** A strand's sparks are already flowing along its whole length, unlit. Only as much of it as the music calls for is lit, so a strand is out within a tenth of a second of a hit and gone half a second after it stops. In Visualizer 4 the sparks have to travel, which takes seconds.
   - **A fresh hit reaches further than a sound that holds,** so beats show in a busy song. This is the same measure of the spectrum that Visualizer 3's peaks stand on.
   - The bass pushes every strand's sparks out faster and swells the hole on each kick. The highs make the specks sparkle.
-- **How it starts:** as the owner's Visualizer 4 in everything the two share, but for Curl and Turning. Those are back at their base (curl 0.6×, no turning), because they're what mixes one band's strands in with the next's. Both sliders are there to turn up.
+- **The owner's standard (2026-10-04):** four times as many strands (4×), finer (thickness 0.76×) and brighter (1.68×), reaching far (reach 1.71×) with bright tips (3.71×). Small, tight curls (curl 1.84×, curl size 0.31×), a small hole (0.81×) and a ring that turns (1.06×). A strong push from the bass (3.30×) and on the beat (1.60×). Bars that move with their neighbours (width 8 bars), show more of a held sound (86%) and let go quickly (fall 0.052 s). A camera that moves a lot (4×), and colours that stay as they are.
+  - It began as the owner's Visualizer 4 in everything the two share, with Curl and Turning back at their base, because they're what mixes one band's strands in with the next's. The owner turned both up again when they tuned it.
 - **Its controls:** Reach (reach, tips), Response (quieter pitches, held sound, width, fall), Flow, Strands, Movement, Picture, Colours.
 
 ## 8. Jets ★★
@@ -160,5 +162,6 @@ The pictures are references only. Each visual is drawn by code in the same style
   - **The sparks rise and fall quickly:** a full jet's are at the top in under half a second. So a jet is up within a beat and down before the next. Quickness sets this.
   - **A fresh hit stands taller than a sound that holds,** as in Visualizer 7.
   - On each beat the kick's jets jump higher. The highs make the sparks twinkle.
-- **How it starts:** as the owner's Visualizer 5 in everything the two share (fewer, brighter, twinkling sparks, the camera, the darker picture, the changing colours). The jets themselves are at their base.
+- **The owner's standard (2026-10-04):** eight jets for each band, in a narrow row (row width 0.60×) fanned wide (fan 4.21×, spread 3.05×). Many small, twinkling sparks (amount 3.74×, size 0.61×, twinkle 2×) that rise and fall slowly (quickness 0.51×), last as long as they can (life 2.5×) and leave long streaks (4×). No glow on the floor. A camera that hardly moves (0.24×) or jumps (0.17×), a darker picture with less glow, and colours that change by themselves, a new set every 4.68 s.
+  - It began as the owner's Visualizer 5 of that morning in everything the two share, with the jets at their base: three for each band, rising and falling quickly.
 - **Its controls:** Jets (jets for each band, height, quickness, row width, spread, fan, amount, kick burst, life), Response (quieter pitches, held sound, width, fall), Sparks, Floor glow, Movement, Picture, Colours.

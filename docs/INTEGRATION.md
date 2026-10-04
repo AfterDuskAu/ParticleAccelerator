@@ -42,7 +42,7 @@ SoundCheckView(listener: listener, settings: settings)   // plain bars and meter
 
 **A look made in Particle Accelerator comes across as it is.** There's nothing to export or convert:
 
-- **Each visual's standard is in the library,** so it arrives with the package. Where the owner has tuned a visual and settled it (Visualizers 4 and 5 so far), those settings are its standard, and a host shows it that way with no settings at all.
+- **Each visual's standard is in the library,** so it arrives with the package. Where the owner has tuned a visual and settled it (Visualizers 4, 5, 7 and 8 so far), those settings are its standard, and a host shows it that way with no settings at all.
 - A person's changes (the sliders and colours of `AcceleratorControls`, a standard they set themselves with its Set Standard button, and the visuals they've locked) are in `AcceleratorSettings.controls`, which is `Codable`. A host that's handed the same settings shows the same picture.
 - Only what the person changed is saved. Everything else follows the visual's standard, so a host gets improvements to those without losing the person's changes.
 - The controls panel itself is in the library, so the host can offer the same sliders.
@@ -74,6 +74,9 @@ Optional extras for a host that wants its own menus:
 - If Music Organizer's mute button sets `isMuted`, the visuals go still a few seconds after muting.
 - That fits Music Organizer's rules: the app never writes inside the library, and the visualizer writes nothing at all.
 - Music Organizer's repo is public, and its CI must be able to fetch this package, so this repo is public too (since 2026-10-03).
+- **It took three visuals early, on 2026-10-04,** at the owner's request: Visualizers 5, 7 and 8, with 7 the one it shows until another is chosen. There's no 1.0.0 to pin yet, so it pins one commit of this repo, and uses what works today (`MusicListener.listen(to:)` and `AcceleratorView(listener:settings:)`). So a change here, to those visuals' standards or to anything `public`, reaches Music Organizer only when its pin is moved, and a change to the API has a host to think of from now on.
+- It gives the listener its player the first time a visualizer is wanted (when it opens, if its own setting says to use one), not always when it starts. Switching to the visualizer for the first time in the middle of a song costs the half-second stop described above, once.
+- It shows them at Medium quality (`settings.quality = .medium`), not Auto. That's the quality the owner tuned the three at, and on the iMac Auto still means High, which Visualizer 8 as the owner has it doesn't hold at 60 fps (`OUTPUT.md`, 2026-10-04). Auto is for when it adapts.
 
 ## Changes to the public API
 
@@ -103,3 +106,4 @@ The API is still a plan until version 1.0.0, and these may change before then.
   - **Added:** Visualizers 7 and 8 can be shown (`VisualInfo.canBeShown`).
   - `AcceleratorControls` has a Lock button for the chosen visual, and Set Standard, Reset to Standard and Reset All. A host that shows the panel gets them with it.
   - A visual with no saved settings now shows its standard, which for Visualizers 4, 5, 7 and 8 isn't its plain first design. That's a change in what a host sees, not in the API.
+- **0.1.0, 2026-10-04, afternoon: no change to the API.** Visualizers 5, 7 and 8 have new standards, the owner's. A host with no saved settings for them shows the new ones.

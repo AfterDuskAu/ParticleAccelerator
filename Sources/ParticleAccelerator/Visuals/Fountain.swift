@@ -12,8 +12,9 @@ import simd
 ///   more of the sparks are its colour, so the spray's colours show what's playing.
 /// - The highs make the sparks twinkle, and the glow on the floor pulses.
 ///
-/// The owner tuned its base design and locked it in on 2026-10-04 (`standard`).
-/// Visualizer 8 (`Jets`) is the copy that carries on from it.
+/// The owner tuned its base design and locked it in on 2026-10-04, then tuned it again
+/// that afternoon (`standard`). Visualizer 8 (`Jets`) is the copy that carries on from
+/// it.
 final class Fountain: Visual {
     static let number = 5
 
@@ -209,15 +210,19 @@ final class Fountain: Visual {
         Control.common.glow, Control.common.brightness, Control.common.darkCorners,
     ]
 
-    /// The owner's standard (2026-10-04, "lock in visualizer 5"): a wide, quick spray
-    /// of fewer, brighter sparks, a camera that moves a lot, and colours that change
-    /// by themselves. Anything not listed is at its base.
+    /// The owner's standard. They locked one in on the morning of 2026-10-04 ("lock in
+    /// visualizer 5"), then unlocked it, tuned it again and set this one that
+    /// afternoon: a tall spray of small, bright, long-lived sparks that leave streaks,
+    /// with bigger bursts on the kick, hardly any glow on the floor, a camera that
+    /// barely jumps on the beat, and colours that stay as they are. Anything not
+    /// listed is at its base.
     static let standard: [String: Float] = [
-        "height": 1.37, "spread": 3.5, "amount": 0.43, "kickBurst": 1.67, "gravity": 3, "life": 2.03,
-        "sparkBrightness": 2.74, "twinkle": 1.93,
-        "cameraMovement": 4, "beatPunch": 1.41,
+        "height": 1.24, "spread": 1.56, "amount": 1.13, "kickBurst": 2.16, "gravity": 3, "life": 2.5,
+        "sparkSize": 0.65, "sparkBrightness": 4, "twinkle": 1.93, "whiteHeat": 0.027, "streaks": 1.39,
+        "floorGlow": 0.17,
+        "cameraMovement": 1.10, "beatPunch": 0.21,
         "glow": 0.24, "brightness": 0.44, "darkCorners": 0.64,
-        BandPalette.changesKey: 1, BandPalette.secondsKey: 4.68,
+        BandPalette.secondsKey: 4.68,
     ]
     /// The owner has settled it. Its panel starts locked, and can be unlocked.
     static let startsLocked = true
