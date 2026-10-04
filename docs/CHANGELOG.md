@@ -462,3 +462,11 @@ What was added:
 
 - **Visualizer 8 at its standard doesn't hold 60 fps at High on the iMac** (17.9 ms a frame, with frames of 40 ms). It does at Medium (4.4 ms), which is the quality the owner tuned it at. Rule 5 asks for High. It's left as the owner set it; turning down Amount or Streaks, or Auto quality that adapts, would bring it back under.
 - **The owner's app still has its own copies of these standards** (Set Standard keeps them in its settings). They read the same as the library's now, so nothing shows; if the library's standard for one of the three changes later, the app goes on showing the owner's saved one until they press Set Standard again or reset it.
+
+### Building with Xcode 16
+
+2026-10-04, about 3:30pm. The first push with the visuals in it was also the first time CI built them, and its Intel Mac, which has Xcode 16, couldn't. Apple changed how `MTAudioProcessingTapCreate` hands back the tap between Xcode 16's SDK and Xcode 26's, and `PlayerFeed` was written for the newer. Music Organizer's CI builds this library on the same Intel Mac, and failed the same way.
+
+- **`PlayerFeed` builds with either SDK** now, without naming a version: what the function hands back is left for the compiler to work out, and the tap is taken hold of in the way that calls for.
+- **Checked:** `swift build` and `swift test` on the iMac (Xcode 26.3, 191 tests). The older form was tried with a stand-in function of Xcode 16's shape: it handed back a tap held once, as it should be. The real check is CI's Intel Mac.
+- **Not known yet:** whether anything else differs with Xcode 16. The library's build stopped at this one error; the tests and the app had never been built there.

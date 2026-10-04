@@ -269,15 +269,35 @@ private func makeTap(for context: PlayerTapContext) -> MTAudioProcessingTap? {
         version: kMTAudioProcessingTapCallbacksVersion_0, clientInfo: held.toOpaque(),
         init: tapInit, finalize: tapFinalize, prepare: tapPrepare, unprepare: tapUnprepare,
         process: tapProcess)
-    var tap: MTAudioProcessingTap?
     // "Pre-effects": the sound as it is in the song, before the player's own volume.
-    let status = MTAudioProcessingTapCreate(
-        kCFAllocatorDefault, &callbacks, kMTAudioProcessingTapCreationFlag_PreEffects, &tap)
-    guard status == noErr, let tap else {
+    let made = whatWasMade { tapOut in
+        MTAudioProcessingTapCreate(
+            kCFAllocatorDefault, &callbacks, kMTAudioProcessingTapCreationFlag_PreEffects, tapOut)
+    }
+    guard let made else {
         held.release()
         return nil
     }
-    return tap
+    return tapToKeep(made)
+}
+
+// Apple changed how `MTAudioProcessingTapCreate` hands back the tap. Xcode 16's SDK hands
+// back an `Unmanaged<MTAudioProcessingTap>`, which the caller must take hold of; Xcode
+// 26's hands back the tap itself. These three build with either, with no version to
+// keep in step: `Made` is whichever the SDK says, and `tapToKeep` is chosen to match.
+// (CI's Intel Mac has Xcode 16, and the first build there failed on this, 2026-10-04.)
+
+/// Calls a function that hands back what it made through a pointer, and gives what it
+/// made, or nil if it said it failed.
+private func whatWasMade<Made>(by create: (UnsafeMutablePointer<Made?>) -> OSStatus) -> Made? {
+    var made: Made?
+    return create(&made) == noErr ? made : nil
+}
+
+private func tapToKeep(_ tap: MTAudioProcessingTap) -> MTAudioProcessingTap { tap }
+
+private func tapToKeep(_ tap: Unmanaged<MTAudioProcessingTap>) -> MTAudioProcessingTap {
+    tap.takeRetainedValue()
 }
 
 private func context(of tap: MTAudioProcessingTap) -> PlayerTapContext {
