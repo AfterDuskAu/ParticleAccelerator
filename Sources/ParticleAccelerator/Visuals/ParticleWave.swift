@@ -184,74 +184,74 @@ final class ParticleWave: Visual {
     enum Control {
         private static func control(
             _ key: String, _ name: String, _ group: String, _ unit: VisualControl.Unit,
-            _ range: ClosedRange<Float>, usual: Float, byRatio: Bool = false, _ help: String
+            _ range: ClosedRange<Float>, base: Float, byRatio: Bool = false, _ help: String
         ) -> VisualControl {
             VisualControl(
                 visual: ParticleWave.number, key: key, name: name, group: group, unit: unit, range: range,
-                usual: usual, spreadsEvenlyByRatio: byRatio, help: help)
+                base: base, standard: ParticleWave.standard[key], spreadsEvenlyByRatio: byRatio, help: help)
         }
 
         static let peakHeight = control(
-            "peakHeight", "Height", "Peaks", .share, 0.2...1, usual: 0.88,
+            "peakHeight", "Height", "Peaks", .share, 0.2...1, base: 0.88,
             "How high a full peak reaches, as a share of the space above the line.")
         static let peakWidth = control(
-            "peakWidth", "Width", "Peaks", .bars, 1...8, usual: 2.5,
+            "peakWidth", "Width", "Peaks", .bars, 1...8, base: 2.5,
             "How wide each peak is. Narrow peaks stand apart; wide ones join into ridges.")
         static let quietPitches = control(
-            "quietPitches", "Quieter pitches", "Peaks", .decibels, 2...14, usual: 5,
+            "quietPitches", "Quieter pitches", "Peaks", .decibels, 2...14, base: 5,
             "A pitch this much quieter than the loudest nearby stands half as tall. Higher shows more of the quieter pitches; lower leaves only the strongest.")
         static let heldSound = control(
-            "heldSound", "Held sound", "Peaks", .share, 0.1...1, usual: 0.55,
+            "heldSound", "Held sound", "Peaks", .share, 0.1...1, base: 0.55,
             "How tall a sound that holds steady stands. Lower makes each fresh hit stand out more.")
         static let bars = control(
-            "bars", "Bars", "Peaks", .count, 8...64, usual: 64,
+            "bars", "Bars", "Peaks", .count, 8...64, base: 64,
             "How many bars of the spectrum the peaks are made from. The music is measured in 64; fewer joins neighbours into broad blocks.")
 
         static let rise = control(
-            "rise", "Rise", "Movement", .seconds, 0.015...0.4, usual: 0.035, byRatio: true,
+            "rise", "Rise", "Movement", .seconds, 0.015...0.4, base: 0.035, byRatio: true,
             "How long sparks take to leap up a peak. Lower is snappier; higher is smoother.")
         static let fall = control(
-            "fall", "Fall", "Movement", .seconds, 0.03...1.5, usual: 0.11, byRatio: true,
+            "fall", "Fall", "Movement", .seconds, 0.03...1.5, base: 0.11, byRatio: true,
             "How long sparks take to drop back to the line. Lower keeps one beat clear of the next; higher lets them hang.")
         static let drift = control(
-            "drift", "Drift", "Movement", .times, 0...4, usual: 1,
+            "drift", "Drift", "Movement", .times, 0...4, base: 1,
             "How much the sparks wander and bob on their own.")
         /// The camera, the streaks and the picture: the controls every visual has.
-        static let common = CommonControls(visual: ParticleWave.number)
+        static let common = CommonControls(visual: ParticleWave.number, standard: ParticleWave.standard)
 
         static let sparkSize = control(
-            "sparkSize", "Size", "Sparks", .times, 0.4...3, usual: 1, byRatio: true,
+            "sparkSize", "Size", "Sparks", .times, 0.4...3, base: 1, byRatio: true,
             "How big each spark is.")
         static let sparkBrightness = control(
-            "sparkBrightness", "Brightness", "Sparks", .times, 0.2...4, usual: 1, byRatio: true,
+            "sparkBrightness", "Brightness", "Sparks", .times, 0.2...4, base: 1, byRatio: true,
             "How bright the sparks are.")
         static let twinkle = control(
-            "twinkle", "Twinkle", "Sparks", .times, 0...2, usual: 1,
+            "twinkle", "Twinkle", "Sparks", .times, 0...2, base: 1,
             "How much the sparks flicker. The highs in the music add to it.")
         static let fullness = control(
-            "fullness", "Fullness", "Sparks", .times, 0.4...2.5, usual: 1, byRatio: true,
+            "fullness", "Fullness", "Sparks", .times, 0.4...2.5, base: 1, byRatio: true,
             "How many of a peak's sparks sit near its top. Lower leaves the tops thin; higher fills the peaks.")
         static let floating = control(
-            "floating", "Floating sparks", "Sparks", .share, 0...0.25, usual: 0.03,
+            "floating", "Floating sparks", "Sparks", .share, 0...0.25, base: 0.03,
             "The share of sparks that float clear of the peaks.")
         static let reflection = control(
-            "reflection", "Reflection", "Sparks", .share, 0...1, usual: 0.45,
+            "reflection", "Reflection", "Sparks", .share, 0...1, base: 0.45,
             "How bright the reflection below the line is, against the peaks above it.")
 
         static let lineThickness = control(
-            "lineThickness", "Thickness", "Line", .times, 0.3...6, usual: 1, byRatio: true,
+            "lineThickness", "Thickness", "Line", .times, 0.3...6, base: 1, byRatio: true,
             "How thick the line is.")
         static let lineBrightness = control(
-            "lineBrightness", "Brightness", "Line", .times, 0...4, usual: 1,
+            "lineBrightness", "Brightness", "Line", .times, 0...4, base: 1,
             "How bright the line is. Each section still brightens with its own band.")
         static let lineGlow = control(
-            "lineGlow", "Haze", "Line", .times, 0...5, usual: 1,
+            "lineGlow", "Haze", "Line", .times, 0...5, base: 1,
             "How strong the soft haze around the line is.")
         static let ripple = control(
-            "ripple", "Kick ripple", "Line", .times, 0...5, usual: 1,
+            "ripple", "Kick ripple", "Line", .times, 0...5, base: 1,
             "How tall the bump is that each kick sends along the line.")
         static let tremble = control(
-            "tremble", "Tremble", "Line", .times, 0...5, usual: 1,
+            "tremble", "Tremble", "Line", .times, 0...5, base: 1,
             "How much the line shivers under the peaks.")
 
     }
@@ -295,9 +295,9 @@ final class ParticleWave: Visual {
         static let forgetting: Float = 5
         /// A pitch this many decibels quieter than the loudest nearby stands half as
         /// tall.
-        var decibelsToHalve = Control.quietPitches.usual
+        var decibelsToHalve = Control.quietPitches.base
         /// A sound that holds steady stands at this share of its height.
-        var heldShare = Control.heldSound.usual
+        var heldShare = Control.heldSound.base
         /// A jump of this many decibels above where a bar has been sitting is a full
         /// hit.
         static let fullJump: Float = 8
@@ -305,10 +305,10 @@ final class ParticleWave: Visual {
         /// clear of it for a moment, and down quickly, so it's ready for the next hit.
         static let settling = SignalShape(riseSeconds: 0.30, fallSeconds: 0.10)
         /// How far to each side a peak's triangle reaches, in bars.
-        var footprint = Control.peakWidth.usual
+        var footprint = Control.peakWidth.base
         /// A peak is up within a frame or two, and takes this long to sink.
         static let riseSeconds = 0.012
-        var fallSeconds = Double(Control.fall.usual)
+        var fallSeconds = Double(Control.fall.base)
         /// How many bars the peaks are made from: all 64, or fewer, with neighbours
         /// joined into blocks.
         var barsShown = SoundAnalyser.barCount

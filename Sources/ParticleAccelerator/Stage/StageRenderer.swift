@@ -25,6 +25,7 @@ final class StageRenderer {
 
     private let queue: MTLCommandQueue
     private let visual: Visual
+    private let visualNumber: Int
     private let glowDown: MTLRenderPipelineState
     private let glowUp: MTLRenderPipelineState
     private let finish: MTLRenderPipelineState
@@ -51,9 +52,10 @@ final class StageRenderer {
             throw StageProblem(message: "Visualizer \(visualNumber) isn't built yet.")
         }
         let library = try Self.compile(
-            StageShaders.common + StageShaders.finishing + visualType.shaderSource,
+            StageShaders.common + BandSections.metalSource + StageShaders.finishing + visualType.shaderSource,
             named: "Visualizer \(visualNumber)", device: device)
         visual = try visualType.init(device: device, library: library, particleCount: tier.particleCount)
+        self.visualNumber = visualNumber
 
         glowDown = try Self.screenPipeline(
             library: library, fragment: "glowDown", format: pictureFormat, adding: false, device: device)
@@ -74,18 +76,33 @@ final class StageRenderer {
     }
 
     /// Every visual that's built, so far.
-    static let visuals: [Visual.Type] = [ParticleWave.self, Tendrils.self, Fountain.self, Starburst.self]
+    static let visuals: [Visual.Type] = [
+        ParticleWave.self, Tendrils.self, Fountain.self, Starburst.self, Corona.self, Jets.self,
+    ]
 
     /// What a person can change about a visual, or nothing if it isn't built.
     static func controls(ofVisual number: Int) -> [VisualControl] {
         visuals.first { $0.number == number }?.controls ?? []
     }
 
+    /// A visual's standard, where it differs from its controls' base settings.
+    static func standard(ofVisual number: Int) -> [String: Float] {
+        visuals.first { $0.number == number }?.standard ?? [:]
+    }
+
+    /// Whether a visual's controls start locked.
+    static func startsLocked(visual number: Int) -> Bool {
+        visuals.first { $0.number == number }?.startsLocked ?? false
+    }
+
     /// Every piece of shader source the stage can be asked to compile, with a name, for
     /// the test that compiles them all.
     static var allShaderSources: [(name: String, source: String)] {
         visuals.map {
-            ("Visualizer \($0.number)", StageShaders.common + StageShaders.finishing + $0.shaderSource)
+            (
+                "Visualizer \($0.number)",
+                StageShaders.common + BandSections.metalSource + StageShaders.finishing + $0.shaderSource
+            )
         }
     }
 
@@ -160,7 +177,7 @@ final class StageRenderer {
         uniforms.seconds = Float(seconds)
         uniforms.pictureSize = SIMD2(Float(pictureSize.width), Float(pictureSize.height))
         uniforms.aspect = Float(pictureSize.width) / Float(pictureSize.height)
-        uniforms.setBandLight(from: values, at: time)
+        uniforms.setBandLight(from: values, visual: visualNumber, at: time)
         visual.prepare(&uniforms, finishing: &finishing, reading: reading, values: values)
 
         visual.draw(VisualFrame(commands: commands, uniforms: uniforms, picture: picture))

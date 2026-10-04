@@ -363,3 +363,74 @@ What was added:
 - **Colours changing by themselves** are a different run every time the app starts. There's no way yet to keep a set that turned up and was liked.
 - **Auto quality** still doesn't adapt, and the flashing limit still isn't built.
 
+
+### A standard and a lock for each visual, Visualizer 6 as a firework, and Visualizers 7 and 8
+
+2026-10-04. The owner had tuned Visualizers 4 and 5 with the controls panel, and sent their panels as two screenshots. They asked for five things:
+
+- Visualizer 5 locked in, with a lock that can be undone.
+- Visualizer 4's settings as its standard.
+- Two new buttons, Set Standard and Reset to Standard, with Reset All left as it is (back to the base).
+- Visualizer 6 changed: sparks moving outward all the time "like a firwork", with no lines straight out, fading as they go.
+- Copies of Visualizers 4 and 5, numbered 7 and 8, made "a lot more responsive to their specific bars. it feels kind of chaotic."
+
+**Base, standard and lock** (the controls panel, and `ControlValues` behind it):
+
+- **Every control now has two settings of the visual's own.** Its base is the plain first setting, and its standard is what the visual shows until someone changes it. They're the same unless the visual says otherwise.
+- **The owner's settings are in the library.** Visualizer 5's and Visualizer 4's standards are the two screenshots, written into `Fountain.standard` and `Tendrils.standard`. So both look that way in any app, with no saved settings at all. Their bases are untouched.
+- **Lock** (a padlock button beside the visual's name): while a visual is locked, none of its sliders, switches, colours or reset buttons can be moved. Visualizer 5 starts locked; the others start unlocked.
+- **Set Standard** makes the settings as they are now the visual's standard, after asking once. It's kept in the person's settings, on top of the library's.
+- **Reset to Standard** puts every control and colour of the visual back to its standard. The small arrow beside a control does the same for that one control, and shows only when the control reads differently from its standard.
+- **Reset All** puts everything back to the base, as before. The standard is still there to come back to.
+- **Each visual has its own colours.** Until now one set was shared by all of them, so changing the colours in one visual would have changed a locked one. The sound check shows the colours of the visual that's showing. Settings saved before this give each visual the colours they shared.
+- **Two settings that read the same are the same.** A slider can land on 1.3747 where the standard is 1.37; both show as "1.37×", and that isn't a change.
+
+**Visualizer 6, second base design:**
+
+- Sparks fire from the centre all the time, in every direction, each on a heading of its own. The streams (lines of sparks behind a bright head) are gone.
+- Each kick throws a shell of them at once, a little faster than the rest.
+- They never stop: the air slows a spark towards a steady drift outward, and it sinks a little. It's brightest for the first fifth of its flight and fades over the rest, still flying.
+- The sparks are kept and moved on the graphics card now, as the fountain's are. The first design worked each spark's place out from how long ago its kick landed, which is what made a burst stop where it reached.
+- New controls: Amount, Kick burst, Life, Slowing, Droop, Bright for, Centre glow. Gone: Streams, Reach, Trail, Spread, Drift between kicks, Heads.
+- Speed is saved under a new name. The first design's Speed was how fast a burst opened, and the owner's saved setting for it (2.65×) would have sent these sparks out of the picture in a third of a second. Their other saved settings for Visualizer 6 mean the same as before and still apply: camera movement, beat punch, turning, twinkle, size, streaks and blur.
+
+**Visualizers 7 (Corona) and 8 (Jets)**, the copies of 4 and 5:
+
+- **Both are laid out in six equal sections,** one for each band, in the sound check's order, with each band's own bars spread across its section (`BandSections`). Every part of the picture belongs to particular bars and moves only with them.
+- **Both follow the same measure of the spectrum as Visualizer 3's peaks:** each part is measured against its own recent loudest moment, and a fresh hit stands taller than a sound that holds. Four controls set it (Response: quieter pitches, held sound, width, fall).
+- **Visualizer 8** is a row of jets across the floor, three for each band to start with (one to eight). A jet stands as tall as its own bars are loud and throws more sparks the louder they are. The sparks rise and fall about four times as fast as Visualizer 5's, so a jet is up within a beat and down before the next (Quickness).
+- **Visualizer 7** keeps Visualizer 4's hole and curling strands. The bands take their places round the hole, sub at the bottom to air at the top, the same on both sides. A strand's sparks flow along its whole length all the time, unlit, and only as much of the strand as its bars call for is lit. So a strand reaches out and lets go as fast as the music does, where Visualizer 4's take seconds.
+- **Each starts as the owner's original** in everything the two share (the camera, the picture, the brightness, the changing colours and so on). Two exceptions, in Visualizer 7: Curl and Turning are at their base, not the owner's 4× and 3.82×, because they're what mixes one band's strands in with the next's.
+
+**A fault found on the way:** the shaders' random numbers (`chance`, `chance2`) go through a sine. On the iMac's graphics card that came out as exactly 0 for about one spark in a thousand, which sent those sparks straight up and drew a faint line above the centre of Visualizer 6. New code uses `sparkChance`, which is worked out in whole numbers. Visualizers 3, 4 and 5 still use the old ones and are left alone: the owner has tuned 4 and 5 as they are, and nothing shows in them.
+
+**Tests:** 190. New ones cover the standards and the lock (the owner's two screenshots are checked setting by setting, and so are the settings their app had saved), each visual's own colours, the sections, and each of Visualizers 6, 7 and 8: that 6 fires without a kick, keeps flying outward as it fades and has no line straight out of its centre; that each of 8's jets rises with its own bars only, and is up within a quarter of a second and down within three quarters; that 7's strands reach out within a tenth of a second and let go within half.
+
+**Measured on the iMac (2026-10-04),** release build, High at its full size, the busiest part of a busy song, each visual as it's first shown:
+
+| 3 Particle Wave | 4 Tendrils | 5 Fountain | 6 Starburst | 7 Corona | 8 Jets |
+|---|---|---|---|---|---|
+| 5.3 ms (slowest 9.1) | 5.7 ms (slowest 8.2) | 8.0 ms (slowest 9.9) | 10.8 ms (slowest 12.4) | 2.1 ms (slowest 4.8) | 3.7 ms (slowest 6.5) |
+
+- **High holds 60 fps for all six,** and with the owner's own saved settings too (none slower than 11.9 ms). The other tiers are in `OUTPUT.md`.
+- The Mac was busier than for earlier tables: Visualizer 3 measured 5.3 ms where it had been 4.5.
+- **Visualizer 6 costs more than its first design did** (10.8 ms against 4.5), because every spark is now in the air in three dimensions and the out-of-focus ones are drawn as wide discs. A spark about to fly past the camera now fades away, where it would have covered the picture as one huge disc for a frame or two. (Before that, in the app, with a speed setting carried over from the first design, the slowest frame was 22 ms. The two weren't measured apart.)
+- **In the app,** High, with the made-up test song: 60 fps, and 2.1 ms (7), 3.4 ms (8), 7.1 ms (5) and 9.5 ms (6, with the owner's settings; slowest 14.4) on the graphics card.
+- **Flashing:** the whole picture's brightness never swung by more than 7% in a third of a second in any of the six. A flash is 10% or more.
+
+**Changes from the plan, and why:**
+
+- **Visualizers 7 and 8 have no reference picture and had no card first.** The routine is a picture, a card, the owner's OK, then the build. Here the owner asked for the copies outright, so the request stood in for the OK and the cards were written as they were built (`VISUALS.md`).
+- **The public API changed in one place:** `SoundCheckView(listener:settings:)` replaces `SoundCheckView(listener:controls:)`, because each visual now has its own colours and the sound check has to know which visual is showing (`INTEGRATION.md`).
+- **The owner's standards are written into the library, not only saved in the app.** A standard that lived only in the app's settings wouldn't reach Music Organizer. Set Standard in the panel is still kept in the person's settings; to make one of those travel with the library, it's written into the visual's file as Visualizer 4's and 5's were.
+- **Visualizer 7 doesn't start with all of Visualizer 4's settings.** Curl and Turning are at their base (see above).
+- **Visualizer 5's colours are part of what was locked in.** Its screenshot stopped above the Colours section. The colours were shared by every visual then, and were changing by themselves (a new set every 4.68 s) when the owner asked, so that's in its standard too.
+- **Visualizer 4 isn't locked.** The owner asked for its settings as the standard and for the lock to be there to use; only Visualizer 5 was asked to be locked.
+
+**Known limits:**
+
+- **The owner hasn't watched Visualizers 6, 7 and 8 yet.** They were looked at as saved frames and in the app, muted.
+- **Visualizer 5 has a faint line of sparks straight up its middle** from the random-number fault above. It sits inside the jet and the owner locked the visual in as it looks, so it's left. Visualizer 8 doesn't have it.
+- **A standard set with the button can't be undone** except by setting another. Reset All still reaches the base, and the library's own standard comes back if the app's settings are cleared.
+- **In Visualizer 7, heavy curl still mixes the bands.** Each strand is lit by its own bars wherever the current has carried its sparks, so the colours still pulse with their bands, but the shape round the hole is lost.
+- **Auto quality** still doesn't adapt, and the flashing limit still isn't built.

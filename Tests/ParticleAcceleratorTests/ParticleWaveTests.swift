@@ -27,7 +27,7 @@ private func settled(_ sound: SIMD64<Float>) -> SIMD64<Float> {
 }
 
 /// A sound that holds steady stands at this share of its height.
-private let held = ParticleWave.Control.heldSound.usual
+private let held = ParticleWave.Control.heldSound.base
 
 @Test func oneSteadyPitchMakesATriangularMountain() {
     let range = settled(bars([30: 1]))
@@ -150,7 +150,7 @@ private let held = ParticleWave.Control.heldSound.usual
     #expect(ParticleWave.bandsSource.contains("waveBandEnds[5]"))
     // And all six colours, as light, each frame.
     var uniforms = StageUniforms()
-    uniforms.setBandLight(from: ControlValues(), at: 0)
+    uniforms.setBandLight(from: ControlValues(), visual: 3, at: 0)
     for band in Band.allCases {
         #expect(uniforms.bandLight[band.rawValue * 4] == band.light.x)
         #expect(uniforms.bandLight[band.rawValue * 4 + 2] == band.light.z)

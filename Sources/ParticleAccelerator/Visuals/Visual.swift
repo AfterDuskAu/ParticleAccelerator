@@ -21,6 +21,13 @@ protocol Visual: AnyObject {
     static var shaderSource: String { get }
     /// What a person can change about it, in the order the controls panel shows them.
     static var controls: [VisualControl] { get }
+    /// Its standard, where that differs from its controls' base settings: each
+    /// control's key and its setting. This is how the owner's "Set Standard" is kept in
+    /// the library, so the visual looks the same in any app.
+    static var standard: [String: Float] { get }
+    /// True if its controls start locked: the owner has settled it, and nothing should
+    /// be moved by accident.
+    static var startsLocked: Bool { get }
 
     /// - Parameters:
     ///   - library: the visual's shaders, compiled.
@@ -43,6 +50,11 @@ protocol Visual: AnyObject {
 
     /// Moves the visual on by one frame and draws it into the picture.
     func draw(_ frame: VisualFrame)
+}
+
+extension Visual {
+    static var standard: [String: Float] { [:] }
+    static var startsLocked: Bool { false }
 }
 
 /// The format of the picture visuals draw into: floating-point, so light can be far

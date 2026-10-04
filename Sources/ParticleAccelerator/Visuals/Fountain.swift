@@ -12,8 +12,8 @@ import simd
 ///   more of the sparks are its colour, so the spray's colours show what's playing.
 /// - The highs make the sparks twinkle, and the glow on the floor pulses.
 ///
-/// This is its base design (2026-10-04): the owner tunes it from here with its
-/// controls.
+/// The owner tuned its base design and locked it in on 2026-10-04 (`standard`).
+/// Visualizer 8 (`Jets`) is the copy that carries on from it.
 final class Fountain: Visual {
     static let number = 5
 
@@ -155,49 +155,49 @@ final class Fountain: Visual {
     enum Control {
         private static func control(
             _ key: String, _ name: String, _ group: String, _ unit: VisualControl.Unit,
-            _ range: ClosedRange<Float>, usual: Float, byRatio: Bool = false, _ help: String
+            _ range: ClosedRange<Float>, base: Float, byRatio: Bool = false, _ help: String
         ) -> VisualControl {
             VisualControl(
                 visual: Fountain.number, key: key, name: name, group: group, unit: unit, range: range,
-                usual: usual, spreadsEvenlyByRatio: byRatio, help: help)
+                base: base, standard: Fountain.standard[key], spreadsEvenlyByRatio: byRatio, help: help)
         }
 
-        static let common = CommonControls(visual: Fountain.number)
+        static let common = CommonControls(visual: Fountain.number, standard: Fountain.standard)
 
         static let height = control(
-            "height", "Height", "Spray", .times, 0.4...2, usual: 1, byRatio: true,
+            "height", "Height", "Spray", .times, 0.4...2, base: 1, byRatio: true,
             "How high the spray reaches. The louder the song, the higher it goes.")
         static let spread = control(
-            "spread", "Spread", "Spray", .times, 0.2...3.5, usual: 1, byRatio: true,
+            "spread", "Spread", "Spray", .times, 0.2...3.5, base: 1, byRatio: true,
             "How wide the cone of sparks opens.")
         static let amount = control(
-            "amount", "Amount", "Spray", .times, 0.2...4, usual: 1, byRatio: true,
+            "amount", "Amount", "Spray", .times, 0.2...4, base: 1, byRatio: true,
             "How many sparks are in the air. The louder the song, the more there are.")
         static let kickBurst = control(
-            "kickBurst", "Kick burst", "Spray", .times, 0...4, usual: 1,
+            "kickBurst", "Kick burst", "Spray", .times, 0...4, base: 1,
             "How big a burst each kick throws.")
         static let gravity = control(
-            "gravity", "Gravity", "Spray", .times, 0...3, usual: 1,
+            "gravity", "Gravity", "Spray", .times, 0...3, base: 1,
             "How hard the sparks are pulled back down. At 0 they sail on upwards.")
         static let life = control(
-            "life", "Life", "Spray", .times, 0.4...2.5, usual: 1, byRatio: true,
+            "life", "Life", "Spray", .times, 0.4...2.5, base: 1, byRatio: true,
             "How long each spark lasts before it fades.")
 
         static let sparkSize = control(
-            "sparkSize", "Size", "Sparks", .times, 0.4...3, usual: 1, byRatio: true,
+            "sparkSize", "Size", "Sparks", .times, 0.4...3, base: 1, byRatio: true,
             "How big each spark is.")
         static let sparkBrightness = control(
-            "sparkBrightness", "Brightness", "Sparks", .times, 0.2...4, usual: 1, byRatio: true,
+            "sparkBrightness", "Brightness", "Sparks", .times, 0.2...4, base: 1, byRatio: true,
             "How bright the sparks are.")
         static let twinkle = control(
-            "twinkle", "Twinkle", "Sparks", .times, 0...2, usual: 1,
+            "twinkle", "Twinkle", "Sparks", .times, 0...2, base: 1,
             "How much the sparks flicker. The highs in the music add to it.")
         static let whiteHeat = control(
-            "whiteHeat", "White heat", "Sparks", .share, 0...1, usual: 0.14,
+            "whiteHeat", "White heat", "Sparks", .share, 0...1, base: 0.14,
             "How far through its life a spark stays white-hot before it takes its colour.")
 
         static let floorGlow = control(
-            "floorGlow", "Floor glow", "Floor", .times, 0...4, usual: 1,
+            "floorGlow", "Floor glow", "Floor", .times, 0...4, base: 1,
             "How bright the glow on the floor and at the mouth is. It pulses with the music.")
     }
 
@@ -208,6 +208,19 @@ final class Fountain: Visual {
         Control.common.cameraMovement, Control.common.beatPunch,
         Control.common.glow, Control.common.brightness, Control.common.darkCorners,
     ]
+
+    /// The owner's standard (2026-10-04, "lock in visualizer 5"): a wide, quick spray
+    /// of fewer, brighter sparks, a camera that moves a lot, and colours that change
+    /// by themselves. Anything not listed is at its base.
+    static let standard: [String: Float] = [
+        "height": 1.37, "spread": 3.5, "amount": 0.43, "kickBurst": 1.67, "gravity": 3, "life": 2.03,
+        "sparkBrightness": 2.74, "twinkle": 1.93,
+        "cameraMovement": 4, "beatPunch": 1.41,
+        "glow": 0.24, "brightness": 0.44, "darkCorners": 0.64,
+        BandPalette.changesKey: 1, BandPalette.secondsKey: 4.68,
+    ]
+    /// The owner has settled it. Its panel starts locked, and can be unlocked.
+    static let startsLocked = true
 
     // MARK: The sparks
 

@@ -35,16 +35,16 @@ let listener = MusicListener()
 listener.listen(to: player)                              // once, when the player is made
 AcceleratorView(listener: listener, settings: settings)  // the visual
 AcceleratorControls(settings: $settings)                 // the panel that changes it while it plays
-SoundCheckView(listener: listener, controls: settings.controls)  // plain bars and meters
+SoundCheckView(listener: listener, settings: settings)   // plain bars and meters
 ```
 
-`settings` is an `AcceleratorSettings`: which visual (only 3 so far), the quality, whether to show the frame time, and the person's own changes to the visual (`controls`). The artwork comes with Visualizer 1.
+`settings` is an `AcceleratorSettings`: which visual (3 to 8 so far), the quality, whether to show the frame time, and the person's own changes to the visuals (`controls`). The artwork comes with Visualizer 1.
 
 **A look made in Particle Accelerator comes across as it is.** There's nothing to export or convert:
 
-- Each visual's own settings are in the library, so they arrive with the package.
-- A person's changes (the sliders and colours of `AcceleratorControls`) are in `AcceleratorSettings.controls`, which is `Codable`. A host that's handed the same settings shows the same picture.
-- Only what the person changed is saved. Everything else follows the visual's own settings, so a host gets improvements to those without losing the person's changes.
+- **Each visual's standard is in the library,** so it arrives with the package. Where the owner has tuned a visual and settled it (Visualizers 4 and 5 so far), those settings are its standard, and a host shows it that way with no settings at all.
+- A person's changes (the sliders and colours of `AcceleratorControls`, a standard they set themselves with its Set Standard button, and the visuals they've locked) are in `AcceleratorSettings.controls`, which is `Codable`. A host that's handed the same settings shows the same picture.
+- Only what the person changed is saved. Everything else follows the visual's standard, so a host gets improvements to those without losing the person's changes.
 - The controls panel itself is in the library, so the host can offer the same sliders.
 
 Three things a host should know about its player:
@@ -97,3 +97,9 @@ The API is still a plan until version 1.0.0, and these may change before then.
   - `SoundCheckView(listener:controls:)`: the same view, with the bands in the person's colours. `SoundCheckView(listener:)` still works.
   - Settings saved by an older version still open: whatever they lack starts as it would in new settings.
 - **0.1.0, 2026-10-04, added:** `VisualInfo.canBeShown`: true for a visual with something to show, even a first version that isn't finished (`isBuilt`). Visualizers 3, 4, 5 and 6 can be shown. `AcceleratorControls` now has a menu to choose between them.
+- **0.1.0, 2026-10-04, changed and added with the standards:**
+  - **Changed:** `SoundCheckView(listener:settings:)` replaces `SoundCheckView(listener:controls:)`. Each visual now has its own colours, so the sound check needs to know which visual is showing. `SoundCheckView(listener:)` still works.
+  - **Changed:** `ControlValues` now also keeps the standards a person has set and the visuals they've locked. `isEmpty` is true only when there are none of those either, and `resetAll()` forgets them too. Settings saved before this still open, and each visual is given the colours the visuals shared then.
+  - **Added:** Visualizers 7 and 8 can be shown (`VisualInfo.canBeShown`).
+  - `AcceleratorControls` has a Lock button for the chosen visual, and Set Standard, Reset to Standard and Reset All. A host that shows the panel gets them with it.
+  - A visual with no saved settings now shows its standard, which for Visualizers 4, 5, 7 and 8 isn't its plain first design. That's a change in what a host sees, not in the API.

@@ -10,77 +10,132 @@ import SwiftUI
 /// A change shows in the visual at the next frame. The changes are part of
 /// `AcceleratorSettings`, so they're saved wherever the host saves those, and a visual
 /// looks the same in any app that's handed the same settings.
+///
+/// Each visual has a standard, and can be locked (the owner, 2026-10-04):
+/// - **Lock** keeps the visual as it is: nothing in the panel can be moved until it's
+///   unlocked.
+/// - **Set Standard** makes the settings as they are now the visual's standard.
+/// - **Reset to Standard** goes back to that standard.
+/// - **Reset All** goes back to the visual's base: its plain first settings.
 public struct AcceleratorControls: View {
     @Binding private var settings: AcceleratorSettings
+    @State private var isAskingToSetStandard = false
 
     public init(settings: Binding<AcceleratorSettings>) {
         _settings = settings
     }
 
     public var body: some View {
-        let controls = StageRenderer.controls(ofVisual: settings.visual)
+        let visual = settings.visual
+        let controls = StageRenderer.controls(ofVisual: visual)
+        let isLocked = settings.controls.isLocked(visual: visual)
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                header(controls)
+                header(hasControls: !controls.isEmpty, isLocked: isLocked)
                 if controls.isEmpty {
-                    Text("Visualizer \(settings.visual) isn't built yet, so there's nothing to change.")
+                    Text("Visualizer \(visual) isn't built yet, so there's nothing to change.")
                         .foregroundStyle(.secondary)
                 }
-                ForEach(Self.groups(of: controls), id: \.name) { group in
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(group.name)
-                            .font(.headline)
-                        ForEach(group.controls) { control in
-                            ControlRow(
-                                control: control, value: settings.controls.value(of: control),
-                                isChanged: settings.controls.isChanged(control),
-                                set: { settings.controls.set($0, for: control) },
-                                reset: { settings.controls.reset(control) }
-                            )
-                            // Only the row whose control moved is drawn again, so
-                            // dragging one slider doesn't hold the visual up.
-                            .equatable()
+                Group {
+                    ForEach(Self.groups(of: controls), id: \.name) { group in
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(group.name)
+                                .font(.headline)
+                            ForEach(group.controls) { control in
+                                row(for: control)
+                            }
                         }
                     }
+                    if !controls.isEmpty {
+                        colours(ofVisual: visual)
+                    }
                 }
-                if !controls.isEmpty {
-                    colours
-                }
+                .disabled(isLocked)
             }
             .padding(16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(white: 0.08))
         .environment(\.colorScheme, .dark)
+        .confirmationDialog(
+            "Make these settings Visualizer \(visual)'s standard?", isPresented: $isAskingToSetStandard
+        ) {
+            Button("Set Standard") { settings.controls.setStandard(visual: visual) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Reset to Standard will come back to these from now on. The standard it has now is replaced.")
+        }
     }
 
-    private func header(_ controls: [VisualControl]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func row(for control: VisualControl) -> some View {
+        ControlRow(
+            control: control, value: settings.controls.value(of: control),
+            standard: settings.controls.standard(of: control),
+            isChanged: settings.controls.isChanged(control),
+            set: { settings.controls.set($0, for: control) },
+            reset: { settings.controls.reset(control) }
+        )
+        // Only the row whose control moved is drawn again, so dragging one slider
+        // doesn't hold the visual up.
+        .equatable()
+    }
+
+    private func header(hasControls: Bool, isLocked: Bool) -> some View {
+        let visual = settings.visual
+        let differsFromStandard = settings.controls.differsFromStandard(visual: visual)
+        return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
                 // Every visual with something to show, to choose between.
                 Picker("Visualizer", selection: $settings.visual) {
-                    ForEach(Visuals.all.filter { $0.canBeShown || $0.number == settings.visual }) { visual in
+                    ForEach(Visuals.all.filter { $0.canBeShown || $0.number == visual }) { visual in
                         Text(visual.title).tag(visual.number)
                     }
                 }
                 .labelsHidden()
                 .fixedSize()
                 Spacer()
-                Button("Reset All") {
-                    settings.controls.reset(controls)
+                if hasControls {
+                    // The padlock shows how it is now; the word says what a click does.
+                    Button {
+                        settings.controls.setLocked(!isLocked, visual: visual)
+                    } label: {
+                        Label(isLocked ? "Unlock" : "Lock", systemImage: isLocked ? "lock.fill" : "lock.open")
+                    }
+                    .help(
+                        isLocked
+                            ? "Let this visual's controls be changed again"
+                            : "Keep this visual as it is: nothing here can be moved until it's unlocked")
                 }
-                .disabled(!settings.controls.hasChanges(among: controls))
-                .help("Put every control and colour back to the visual's own")
             }
-            Text("Changes show straight away and are kept. Rest the pointer on a control to see what it does.")
+            if hasControls {
+                HStack(spacing: 6) {
+                    Button("Set Standard") { isAskingToSetStandard = true }
+                        .disabled(isLocked || !differsFromStandard)
+                        .help("Make the settings as they are now this visual's standard")
+                    Button("Reset to Standard") { settings.controls.resetToStandard(visual: visual) }
+                        .disabled(isLocked || !differsFromStandard)
+                        .help("Put every control and colour back to this visual's standard")
+                    Button("Reset All") { settings.controls.resetToBase(visual: visual) }
+                        .disabled(isLocked || !settings.controls.differsFromBase(visual: visual))
+                        .help("Put every control and colour back to the visual's base: its plain first settings")
+                }
+                .controlSize(.small)
+                Text(
+                    isLocked
+                        ? "Locked, so nothing is changed by accident. Unlock to change it."
+                        : differsFromStandard
+                            ? "Changed from its standard. Changes show straight away and are kept."
+                            : "At its standard. Changes show straight away and are kept. Rest the pointer on a control to see what it does."
+                )
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 
-    private var colours: some View {
-        let changing = BandPalette.changesControl
+    private func colours(ofVisual visual: Int) -> some View {
+        let changing = BandPalette.changesControl(ofVisual: visual)
         let changes = settings.controls.value(of: changing) >= 0.5
         return VStack(alignment: .leading, spacing: 8) {
             Text("Colours")
@@ -89,32 +144,19 @@ public struct AcceleratorControls: View {
                 changing.name,
                 isOn: Binding(
                     get: { changes },
-                    set: { isOn in
-                        if isOn {
-                            settings.controls.set(1, for: changing)
-                        } else {
-                            settings.controls.reset(changing)
-                        }
-                    })
+                    set: { settings.controls.set($0 ? 1 : 0, for: changing) })
             )
             .help(changing.help)
             if changes {
-                let seconds = BandPalette.secondsControl
-                ControlRow(
-                    control: seconds, value: settings.controls.value(of: seconds),
-                    isChanged: settings.controls.isChanged(seconds),
-                    set: { settings.controls.set($0, for: seconds) },
-                    reset: { settings.controls.reset(seconds) }
-                )
-                .equatable()
+                row(for: BandPalette.secondsControl(ofVisual: visual))
             }
             Group {
                 ForEach(Band.allCases, id: \.self) { band in
                     ColourRow(
-                        band: band, colour: settings.controls.colour(of: band),
-                        isChanged: settings.controls.isColourChanged(band),
-                        set: { settings.controls.setColour($0, for: band) },
-                        reset: { settings.controls.resetColour(of: band) }
+                        band: band, colour: settings.controls.colour(of: band, in: visual),
+                        isChanged: settings.controls.isColourChanged(band, in: visual),
+                        set: { settings.controls.setColour($0, for: band, in: visual) },
+                        reset: { settings.controls.resetColour(of: band, in: visual) }
                     )
                     .equatable()
                 }
@@ -125,7 +167,7 @@ public struct AcceleratorControls: View {
             Text(
                 changes
                     ? "The colours are choosing themselves. Switch that off to pick your own."
-                    : "The sound check's bars and meters use the same colours."
+                    : "These are this visual's colours. The sound check's bars and meters show them too."
             )
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -147,11 +189,12 @@ public struct AcceleratorControls: View {
     }
 }
 
-/// One control: its name, its value in words, a way back to the visual's own setting,
-/// and the slider.
+/// One control: its name, its value in words, a way back to its standard, and the
+/// slider.
 private struct ControlRow: View, Equatable {
     let control: VisualControl
     let value: Float
+    let standard: Float
     let isChanged: Bool
     let set: (Float) -> Void
     let reset: () -> Void
@@ -159,7 +202,8 @@ private struct ControlRow: View, Equatable {
     /// Two rows are the same when they show the same thing; what they do when moved
     /// doesn't come into it.
     static func == (one: ControlRow, other: ControlRow) -> Bool {
-        one.control == other.control && one.value == other.value && one.isChanged == other.isChanged
+        one.control == other.control && one.value == other.value && one.standard == other.standard
+            && one.isChanged == other.isChanged
     }
 
     var body: some View {
@@ -172,7 +216,7 @@ private struct ControlRow: View, Equatable {
                     .foregroundStyle(.secondary)
                 ResetButton(
                     isChanged: isChanged, name: control.name,
-                    help: "Back to \(control.text(for: control.usual))", reset: reset)
+                    help: "Back to its standard, \(control.text(for: standard))", reset: reset)
             }
             Slider(
                 value: Binding(
@@ -188,7 +232,7 @@ private struct ControlRow: View, Equatable {
     }
 }
 
-/// One band's colour: a colour picker, and a way back to the band's own colour.
+/// One band's colour: a colour picker, and a way back to its standard colour.
 private struct ColourRow: View, Equatable {
     let band: Band
     let colour: SIMD3<Float>
@@ -213,7 +257,7 @@ private struct ColourRow: View, Equatable {
                     }),
                 supportsOpacity: false)
             ResetButton(
-                isChanged: isChanged, name: "\(band.name) colour", help: "Back to the band's own colour",
+                isChanged: isChanged, name: "\(band.name) colour", help: "Back to its standard colour",
                 reset: reset)
         }
     }

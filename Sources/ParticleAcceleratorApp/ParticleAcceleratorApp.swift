@@ -177,7 +177,7 @@ private struct MainView: View {
                 if choices.showsSoundCheck {
                     // The bars sit under the visual in the same order and the same
                     // colours as its sections, so one reads against the other.
-                    SoundCheckView(listener: listener, controls: choices.controls)
+                    SoundCheckView(listener: listener, settings: choices.settings)
                         .frame(height: 370)
                 }
             }
@@ -185,12 +185,12 @@ private struct MainView: View {
                 AcceleratorControls(
                     settings: Binding(get: { choices.settings }, set: { choices.settings = $0 })
                 )
-                .frame(width: 300)
+                .frame(width: 320)
             }
         }
         .background(Color(white: 0.2))
         .frame(
-            minWidth: choices.showsControls ? 1_090 : 820,
+            minWidth: choices.showsControls ? 1_110 : 820,
             minHeight: choices.showsSoundCheck ? 660 : 520
         )
         .overlay(alignment: .top) {

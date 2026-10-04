@@ -9,15 +9,27 @@ The pictures are references only. Each visual is drawn by code in the same style
 | 1 | Ring & Ink | very close | ★★ | planned |
 | 2 | Iron Maw | a stylised version | ★★★★★ | planned |
 | 3 | Particle Wave | close in shape; the colours are ours | ★★ | second version built 2026-10-03, after the owner's first notes; waiting for their notes on it |
-| 4 | Tendrils | close in motion; the colours are ours | ★★★★ | base design built 2026-10-04; for the owner to tune |
-| 5 | Fountain | very close | ★ | base design built 2026-10-04; for the owner to tune |
-| 6 | Starburst | close | ★★★ | base design built 2026-10-04, from the card alone (the picture still isn't in `references/`); for the owner to tune |
+| 4 | Tendrils | close in motion; the colours are ours | ★★★★ | base design built 2026-10-04; the owner tuned it and set its standard the same day |
+| 5 | Fountain | very close | ★ | base design built 2026-10-04; the owner tuned it and locked it in the same day |
+| 6 | Starburst | a firework from the centre, at the owner's direction | ★★★ | second base design built 2026-10-04, after the owner's notes on the first; for the owner to tune |
+| 7 | Corona | ours: Visualizer 4 laid out by band | ★★★★ | base design built 2026-10-04, at the owner's request; for the owner to tune |
+| 8 | Jets | ours: Visualizer 5 laid out by band | ★★ | base design built 2026-10-04, at the owner's request; for the owner to tune |
 
 **A base design** is a first version with every setting on a slider (View → Controls), built so the owner can shape it themselves. It isn't marked built until they're happy with it.
 
+**Base, standard and lock** (the owner, 2026-10-04). Every control has two settings of the visual's own:
+
+- **Its base:** the plain first setting the visual was designed with. **Reset All** goes back to it.
+- **Its standard:** what the visual shows until someone changes it. **Reset to Standard** goes back to it, and **Set Standard** makes the settings as they are now the standard.
+- A visual whose standard the owner has settled has it written into the library (`Fountain.standard`, `Tendrils.standard`), so it looks the same in any app. A standard set with the button is kept in that person's settings.
+- **Lock** keeps a visual as it is: nothing in its panel can be moved until it's unlocked. Visualizer 5 starts locked.
+- Each visual has its own colours, and they're part of its standard.
+
+**Visualizers 7 and 8 have no reference picture.** They're copies of 4 and 5 that the owner asked for, laid out so that every part of the picture belongs to particular bars of the spectrum. Their cards say what they are in place of a picture.
+
 **In every visual with particles:**
 
-- **Each band has its colour,** the same six everywhere, and the owner can pick their own or have them change by themselves (below).
+- **Each band has its colour.** Each visual has its own six, which start as the same six everywhere. The owner can pick others or have them change by themselves (below).
 - **Sparks are drawn the way a camera sees them** (2026-10-04, after the owner asked for "more realistic, more high def"): a hot core with a soft skirt, drawn out into a short streak when it's moving fast, and an even disc when it's out of focus.
 - **Colours that change by themselves** (2026-10-04): switched on, the six colours drift slowly from one made-up set to the next and never settle. The sets are six hues spread round the colour wheel, so neighbouring bands always stay apart.
 
@@ -86,6 +98,7 @@ The pictures are references only. Each visual is drawn by code in the same style
   - The camera moves less than in the other visuals: the trails stay where the picture was, so a moving camera smears them.
   - The cover in the hole waits for the visuals that use artwork.
 - **Its controls:** Flow (speed, bass push, curl, curl size, turning, hole size), Strands (how many, trail, thickness, brightness, specks, twinkle), Movement, Picture, Colours.
+- **The owner's standard (2026-10-04):** slow strands (speed 0.47×) that curl and turn a great deal (curl 4×, turning 3.82×) round a bigger hole (1.77×). Trails so short the strands show as beads (0.05 s). A camera that moves a lot (4×). Colours that change by themselves, a new set every 4.68 s. The owner's note on it: "it feels kind of chaotic", which is what Visualizer 7 is for.
 
 ## 5. Fountain ★
 
@@ -101,20 +114,51 @@ The pictures are references only. Each visual is drawn by code in the same style
   - **Each spark is a band's colour.** The stronger a band is as a spark is thrown, the more of the sparks are its colour, so the spray's colours show what's playing.
   - A glow lies on the floor and stands at the mouth, and both pulse with the loudness and the kick.
 - **Its controls:** Spray (height, spread, amount, kick burst, gravity, life), Sparks (size, brightness, twinkle, white heat, streaks), Floor glow, Movement, Picture, Colours.
+- **The owner's standard (2026-10-04), locked in:** a wide, quick spray (spread 3.5×, gravity 3×, height 1.37×) of fewer, brighter, twinkling sparks (amount 0.43×, brightness 2.74×, twinkle 1.93×) that last twice as long. A camera that moves a lot (4×), a darker picture with less glow, and colours that change by themselves, a new set every 4.68 s. Its panel starts locked.
 
 ## 6. Starburst ★★★
 
-*Reference: a still of particle streams bursting outward in 3D (sent in chat on 2026-10-03; to be saved as `references/visualizer-6-starburst`).*
+*Reference: a still of particle streams bursting outward in 3D (sent in chat on 2026-10-03; never saved in `references/`).*
 
-- **In it:** lavender-white streams of sparks shoot outward from a centre in 3D, each led by a bright head. Near sparks are big and blurred, far ones small and sharp.
-- **With the music:** kicks fire new bursts, and loudness sets their speed and how many streams there are. The camera drifts slowly into the burst, and near sparks go out of focus.
-- **How close:** close.
-- **Needs:** a 3D camera with depth of field (blur by distance), and bursts.
-- **As built (base design, 2026-10-04):**
-  - Each kick fires a burst, and the last four are in the air together. A stream is a head with a trail of sparks following it out, fast at first and slowing.
-  - **Each stream belongs to a band** and is a pale shade of its colour (Whiteness sets how pale; at 100% it's the picture's own lavender-white). The stronger the band, the further its streams reach.
-  - The louder the song, the faster the streams and the more of them fire.
-  - Between kicks a thin field of sparks drifts outward, faster when it's loud, so the picture is never empty.
-  - Sparks flying towards the camera go out of focus into soft discs.
-  - Nothing is kept from frame to frame: where a spark is follows from its number and how long ago its kick landed.
-- **Its controls:** Burst (streams, reach, speed, trail, spread, drift between kicks, turning), Sparks (size, brightness, twinkle, whiteness, heads, blur, streaks), Movement, Picture, Colours.
+- **In the picture:** lavender-white streams of sparks shoot outward from a centre in 3D, each led by a bright head. Near sparks are big and blurred, far ones small and sharp.
+- **How close:** no longer close to the picture's streams, at the owner's direction (below). The centre, the depth and the blur are the picture's.
+- **Needs:** a 3D camera with depth of field (blur by distance), and sparks that are thrown and fly.
+- **The owner's notes on the first base design (2026-10-04):** "instead of it being short burst. id like it more if it was continiously moving outward. like a firwork. no direct line straight out. just firing off from the center. and once the moment has passed for it, it fades but still moved outward." The first design fired streams on each kick: lines of sparks behind a bright head, which flew out, stopped where they'd reached, and faded there.
+- **As built (second base design, 2026-10-04):**
+  - **Sparks fire from the centre all the time,** in every direction. A trickle in silence, most of them when it's loud.
+  - **Each kick throws a shell** of them at once, a little faster than the rest, so it runs out through them.
+  - **No lines.** Every spark has a heading of its own, so no two follow each other out.
+  - **They never stop.** The air slows a spark towards a steady drift outward, and it sinks a little, as a firework's sparks do. It's at its brightest for the first fifth of its flight and fades over the rest, still flying.
+  - **Each spark is a pale shade of a band's colour** (Whiteness sets how pale; at 100% it's the picture's own lavender-white). The stronger a band is as a spark fires, the more of the sparks are its colour and the faster they leave.
+  - The centre glows with the loudness and pulses on each kick. Sparks flying towards the camera go out of focus into soft discs.
+- **Its controls:** Burst (amount, speed, kick burst, life, slowing, droop, turning), Sparks (size, brightness, bright for, twinkle, whiteness, blur, streaks), Centre glow, Movement, Picture, Colours.
+
+## 7. Corona ★★★★
+
+*No reference picture: Visualizer 4, laid out by band (the owner, 2026-10-04).*
+
+- **Why:** the owner asked for a copy of Visualizer 4 "a lot more responsive to their specific bars. it feels kind of chaotic." In Visualizer 4 every strand flows to the whole song and the curl mixes the bands together, so nothing in the picture can be traced to a part of the music.
+- **In it:** the same dark hole, with the same curling strands pouring out of it. But the ring of strands has a shape, and the shape is the music's.
+- **With the music:**
+  - **The bands take their places round the hole,** the same on the left as on the right: sub at the bottom, then kick, low mids, mids and vocals, to air at the top. Each band has an equal share of the ring, and its own bars are spread across its share.
+  - **A strand reaches as far as its own bars are loud,** and brightens with them. Its tip is brightest, so the tips trace the music's shape.
+  - **It does that at once.** A strand's sparks are already flowing along its whole length, unlit. Only as much of it as the music calls for is lit, so a strand is out within a tenth of a second of a hit and gone half a second after it stops. In Visualizer 4 the sparks have to travel, which takes seconds.
+  - **A fresh hit reaches further than a sound that holds,** so beats show in a busy song. This is the same measure of the spectrum that Visualizer 3's peaks stand on.
+  - The bass pushes every strand's sparks out faster and swells the hole on each kick. The highs make the specks sparkle.
+- **How it starts:** as the owner's Visualizer 4 in everything the two share, but for Curl and Turning. Those are back at their base (curl 0.6×, no turning), because they're what mixes one band's strands in with the next's. Both sliders are there to turn up.
+- **Its controls:** Reach (reach, tips), Response (quieter pitches, held sound, width, fall), Flow, Strands, Movement, Picture, Colours.
+
+## 8. Jets ★★
+
+*No reference picture: Visualizer 5, laid out by band (the owner, 2026-10-04).*
+
+- **Why:** the same request as Visualizer 7. In Visualizer 5 every band's sparks are thrown together from one mouth to the loudness of the whole song.
+- **In it:** a row of jets across the floor, each a narrow fountain of the same sparks, leaning out a little from the middle like a fan.
+- **With the music:**
+  - **Each band has jets of its own,** in its colour, in the sound check's order: sub on the left to air on the right. Three for each band to start with, and each follows its own part of its band's bars.
+  - **A jet stands as tall as its own bars are loud,** throws more sparks the louder they are, and glows at its mouth with them. Nothing else moves it.
+  - **The sparks rise and fall quickly:** a full jet's are at the top in under half a second. So a jet is up within a beat and down before the next. Quickness sets this.
+  - **A fresh hit stands taller than a sound that holds,** as in Visualizer 7.
+  - On each beat the kick's jets jump higher. The highs make the sparks twinkle.
+- **How it starts:** as the owner's Visualizer 5 in everything the two share (fewer, brighter, twinkling sparks, the camera, the darker picture, the changing colours). The jets themselves are at their base.
+- **Its controls:** Jets (jets for each band, height, quickness, row width, spread, fan, amount, kick burst, life), Response (quieter pitches, held sound, width, fall), Sparks, Floor glow, Movement, Picture, Colours.

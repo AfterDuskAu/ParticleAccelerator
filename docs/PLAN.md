@@ -1,6 +1,6 @@
 # Plan
 
-**Status, 2026-10-04:** phase 1 is done; phase 2 (the stage) is done but for Auto quality that adapts and the flashing limit. Four visuals are on screen: Visualizer 3 (Particle Wave) in its second version, and base designs of Visualizers 4 (Tendrils), 5 (Fountain) and 6 (Starburst), each with its controls. The controls panel (phase 8) has every visual's settings on sliders, the bands' colours, and colours that change by themselves. The stage draws on a thread of its own. Next: the owner tunes the four visuals; then presets, Auto quality that adapts, and the flashing limit.
+**Status, 2026-10-04:** phase 1 is done; phase 2 (the stage) is done but for Auto quality that adapts and the flashing limit. Six visuals are on screen, each with its controls: Visualizer 3 (Particle Wave) in its second version; Visualizers 4 (Tendrils) and 5 (Fountain), tuned by the owner, with their standards set and 5 locked in; Visualizer 6 (Starburst) in its second base design; and base designs of Visualizers 7 (Corona) and 8 (Jets), the copies of 4 and 5 laid out by band. The controls panel (phase 8) has every visual's settings on sliders, each visual's own colours, colours that change by themselves, and a standard and a lock for each visual. The stage draws on a thread of its own. Next: the owner's notes on Visualizers 6, 7 and 8; then presets, Auto quality that adapts, and the flashing limit.
 
 ## What it is
 
@@ -84,8 +84,8 @@ Every visual comes with good settings, and the controls panel lets the owner cha
 | 3 | **Visual 5 (Fountain).** Base design built 2026-10-04, at the owner's request, for them to tune with the controls. | | 1 |
 | 4 | **Output options:** window, full screen on any screen, an output screen, frame rate, drawing size, brighter than white | Visuals on a TV or second monitor | 1–2 |
 | 5 | **Visual 1 (Ring & Ink)**, with the cover from a song file's own tags | | 1–2 |
-| 6 | **Visual 6 (Starburst).** Base design built 2026-10-04, likewise. | | 1–2 |
-| 7 | **Visual 4 (Tendrils).** Base design built 2026-10-04, likewise. | | 2 |
+| 6 | **Visual 6 (Starburst).** Base design built 2026-10-04, likewise; second base design the same day, after the owner's notes. | | 1–2 |
+| 7 | **Visual 4 (Tendrils).** Base design built 2026-10-04, likewise. **Visuals 7 (Corona) and 8 (Jets)** came the same day: copies of 4 and 5 laid out by band, at the owner's request. | | 2 |
 | 8 | **The controls editor and presets:** each control's source, range, curve and fade; save, name, reset, and share as a file. **Started early, 2026-10-03, at the owner's request:** the controls panel, with a slider for each of a visual's settings and a colour for each band, kept with the settings. **Still to do:** presets (save, name, share as a file); choosing which part of the music drives each control; building blocks a person can add (a second line, another layer of sparks). | Vizibeat-style "what moves with what"; a visualizer builder | 2–4 |
 | 9 | **Ready for Music Organizer:** the public API finished as in `INTEGRATION.md`, a test host that uses only that API, version 1.0.0 tagged. Then one session in Music Organizer to add it. | Visuals inside Music Organizer | 1 + 1 |
 | 10 | **Recording a video** from a song file, at any size and frame rate (`OUTPUT.md`) | 4K videos, even from the iMac | 2 |
@@ -98,6 +98,7 @@ Every visual comes with good settings, and the controls panel lets the owner cha
 - **The visuals then run easiest to hardest**, each adding one new building block: the emitter, then the background shader, 3D depth, trails, and finally 3D shapes.
 - **Music Organizer gets it after five visuals and the editor**, when there's a full set to use every day. The owner can move phase 9 earlier at any time.
 - **The three other particle visuals came early as base designs** (owner, 2026-10-04: "add as many base designs that have to do with particles"). With the controls panel, the owner shapes each one themselves, so a first version with good sliders is worth more than a finished one made by guesswork. Visuals 1 and 2 aren't made of particles and keep their places.
+- **Visuals 7 and 8 came from the owner's notes, not from pictures** (2026-10-04): copies of 4 and 5 made "a lot more responsive to their specific bars". The owner's request stood in for the card's OK, and the cards were written as they were built.
 - **The controls panel came early** (owner, 2026-10-03): "an actual visualizer builder", so the owner can change a visual themselves and the two of us can settle a look quickly. Every visual from now on lists its controls as it's built. Whatever is made with it has to reach Music Organizer without trouble, which is why the controls and a person's changes live in the library and not in the app.
 
 **Rough total:** 20–28 sessions, plus the owner's time watching and giving notes.
@@ -112,7 +113,7 @@ Every visual comes with good settings, and the controls panel lets the owner cha
 4. **The owner OKs the card**, or changes it, and says where it goes in the building order.
 5. **It is built and tried on three test songs:** a bass-heavy one, a calm acoustic one and a vocal pop one. (The owner's standing sample song is "Do I Wanna Know?" by Arctic Monkeys, 85 BPM.) Claude checks the frame time on the iMac at High and compares saved frames with the picture.
 6. **The owner watches it** and gives notes, and it's tuned until they're happy.
-7. **Its settings become its built-in preset.** It's marked built, with a changelog entry and a commit.
+7. **Its settings become its standard,** written into the library so it looks the same in any app (`VISUALS.md`, "Base, standard and lock"). It's marked built, with a changelog entry and a commit.
 
 ## Decisions waiting for the owner
 

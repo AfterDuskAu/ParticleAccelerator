@@ -12,16 +12,16 @@ private let fall = ParticleWave.Control.fall
 @Test func aControlKeepsTheVisualsOwnSettingUntilItIsChanged() {
     var values = ControlValues()
     #expect(values.isEmpty)
-    #expect(values.value(of: height) == height.usual)
+    #expect(values.value(of: height) == height.base)
     #expect(!values.isChanged(height))
 
     values.set(0.5, for: height)
     #expect(values.value(of: height) == 0.5)
     #expect(values.isChanged(height) && !values.isChanged(fall))
-    #expect(values.hasChanges(among: ParticleWave.controls))
+    #expect(values.differsFromStandard(visual: 3))
 
     values.reset(height)
-    #expect(values.value(of: height) == height.usual)
+    #expect(values.value(of: height) == height.base)
     #expect(values.isEmpty)
 }
 
@@ -35,27 +35,38 @@ private let fall = ParticleWave.Control.fall
 
 @Test func aBandsColourCanBeChangedAndPutBack() {
     var values = ControlValues()
-    #expect(values.colour(of: .kick) == Band.kick.colour)
-    values.setColour(SIMD3(0.1, 0.9, 0.2), for: .kick)
-    #expect(values.colour(of: .kick) == SIMD3(0.1, 0.9, 0.2))
-    #expect(values.isColourChanged(.kick) && !values.isColourChanged(.sub))
-    #expect(values.colour(of: .sub) == Band.sub.colour)
-    values.resetColour(of: .kick)
-    #expect(values.colour(of: .kick) == Band.kick.colour)
+    #expect(values.colour(of: .kick, in: 3) == Band.kick.colour)
+    values.setColour(SIMD3(0.1, 0.9, 0.2), for: .kick, in: 3)
+    #expect(values.colour(of: .kick, in: 3) == SIMD3(0.1, 0.9, 0.2))
+    #expect(values.isColourChanged(.kick, in: 3) && !values.isColourChanged(.sub, in: 3))
+    #expect(values.colour(of: .sub, in: 3) == Band.sub.colour)
+    values.resetColour(of: .kick, in: 3)
+    #expect(values.colour(of: .kick, in: 3) == Band.kick.colour)
     #expect(values.isEmpty)
+}
+
+@Test func eachVisualHasItsOwnColours() {
+    // So one visual can be locked while another's colours are changed.
+    var values = ControlValues()
+    values.setColour(SIMD3(0.1, 0.9, 0.2), for: .kick, in: 3)
+    #expect(values.colour(of: .kick, in: 6) == Band.kick.colour)
+    #expect(BandPalette(values, visual: 6).colours(at: 0) == Band.allCases.map(\.colour))
+    #expect(BandPalette(values, visual: 3).colours(at: 0)[Band.kick.rawValue] == SIMD3(0.1, 0.9, 0.2))
 }
 
 @Test func resetAllPutsEverythingBack() {
     var values = ControlValues()
     values.set(0.4, for: height)
     values.set(0.5, for: fall)
-    values.setColour(SIMD3(1, 1, 1), for: .air)
-    values.reset(ParticleWave.controls)
+    values.setColour(SIMD3(1, 1, 1), for: .air, in: 3)
+    values.resetToBase(visual: 3)
     #expect(values.isEmpty)
 
     // And the same for a host, which doesn't know one visual's controls from another's.
     values.set(0.4, for: height)
-    values.setColour(SIMD3(1, 1, 1), for: .air)
+    values.setColour(SIMD3(1, 1, 1), for: .air, in: 3)
+    values.setLocked(true, visual: 3)
+    values.setStandard(visual: 3)
     values.resetAll()
     #expect(values.isEmpty)
 }
@@ -64,13 +75,13 @@ private let fall = ParticleWave.Control.fall
     var settings = AcceleratorSettings()
     settings.quality = .medium
     settings.controls.set(0.4, for: height)
-    settings.controls.setColour(SIMD3(0.2, 0.4, 0.6), for: .mids)
+    settings.controls.setColour(SIMD3(0.2, 0.4, 0.6), for: .mids, in: 3)
 
     let saved = try JSONEncoder().encode(settings)
     let back = try JSONDecoder().decode(AcceleratorSettings.self, from: saved)
     #expect(back == settings)
     #expect(back.controls.value(of: height) == 0.4)
-    #expect(back.controls.colour(of: .mids) == SIMD3(0.2, 0.4, 0.6))
+    #expect(back.controls.colour(of: .mids, in: 3) == SIMD3(0.2, 0.4, 0.6))
 }
 
 @Test func settingsSavedBeforeTheControlsExistedStillOpen() throws {
@@ -86,11 +97,12 @@ private let fall = ParticleWave.Control.fall
 }
 
 @Test func aSavedValueThatMakesNoSenseIsIgnored() throws {
-    // A colour with two numbers, and a control from a visual that doesn't exist.
-    let odd = #"{"controls":{"numbers":{"99.nothing":4},"colours":{"kick":[0.5,0.5]}}}"#
+    // Colours with two numbers, and a control from a visual that doesn't exist.
+    let odd = #"{"controls":{"numbers":{"99.nothing":4},"colours":{"kick":[0.5,0.5],"3.sub":[1,1]}}}"#
     let settings = try JSONDecoder().decode(AcceleratorSettings.self, from: Data(odd.utf8))
-    #expect(settings.controls.colour(of: .kick) == Band.kick.colour)
-    #expect(settings.controls.value(of: height) == height.usual)
+    #expect(settings.controls.colour(of: .kick, in: 3) == Band.kick.colour)
+    #expect(settings.controls.colour(of: .sub, in: 3) == Band.sub.colour)
+    #expect(settings.controls.value(of: height) == height.base)
 }
 
 // MARK: Every visual's list of controls
@@ -103,7 +115,9 @@ private let fall = ParticleWave.Control.fall
         #expect(StageRenderer.controls(ofVisual: visual.number) == controls)
         for control in controls {
             #expect(control.visual == visual.number)
-            #expect(control.range.contains(control.usual), "\(control.id)")
+            #expect(control.range.contains(control.base), "\(control.id)")
+            #expect(control.range.contains(control.standard), "\(control.id)")
+            #expect(control.id == "\(visual.number).\(control.key)")
             #expect(control.range.lowerBound < control.range.upperBound, "\(control.id)")
             #expect(!control.name.isEmpty && !control.group.isEmpty && control.help.hasSuffix("."), "\(control.id)")
             // A slider that gives equal room to equal ratios can't start at nothing.
@@ -119,9 +133,9 @@ private let fall = ParticleWave.Control.fall
     for control in ParticleWave.controls {
         #expect(control.sliderPlace(of: control.range.lowerBound) == 0, "\(control.id)")
         #expect(abs(control.sliderPlace(of: control.range.upperBound) - 1) < 1e-6, "\(control.id)")
-        let place = control.sliderPlace(of: control.usual)
+        let place = control.sliderPlace(of: control.base)
         #expect(place >= 0 && place <= 1)
-        #expect(abs(control.value(atSliderPlace: place) - control.usual) < 1e-4 * max(1, control.usual), "\(control.id)")
+        #expect(abs(control.value(atSliderPlace: place) - control.base) < 1e-4 * max(1, control.base), "\(control.id)")
     }
     // Times get as much room from 0.03 to 0.3 as from 0.15 to 1.5.
     #expect(abs((fall.sliderPlace(of: 0.3) - fall.sliderPlace(of: 0.03)) - (fall.sliderPlace(of: 1.5) - fall.sliderPlace(of: 0.15))) < 1e-5)
@@ -205,7 +219,7 @@ private let fall = ParticleWave.Control.fall
 /// Music right across the spectrum, drawn with these changes.
 private func picture(_ change: (inout ControlValues) -> Void = { _ in }) throws -> Frame {
     let stage = try TestStage()
-    var values = ControlValues()
+    var values = baseValues(ofVisual: 3)
     change(&values)
     stage.renderer.values = values
     var reading = SoundReading.silence
@@ -241,7 +255,7 @@ func aPickedColourShowsInItsBandsSection() throws {
     // The kick's section is pink until the person picks green for it.
     let usual = try picture().colour(left: 0.15, top: 0.30, right: 0.21, bottom: 0.46)
     #expect(usual.red > usual.green * 1.3, "\(usual)")
-    let picked = try picture { $0.setColour(SIMD3(0.1, 1, 0.2), for: .kick) }
+    let picked = try picture { $0.setColour(SIMD3(0.1, 1, 0.2), for: .kick, in: 3) }
     let kick = picked.colour(left: 0.15, top: 0.30, right: 0.21, bottom: 0.46)
     #expect(kick.green > kick.red * 1.3, "\(kick)")
     // The section two along is left as it was.

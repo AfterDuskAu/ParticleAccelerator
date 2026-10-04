@@ -10,15 +10,15 @@ import SwiftUI
 /// built on it. It stops drawing when its window can't be seen.
 public struct SoundCheckView: View {
     private let listener: MusicListener
-    /// The bands' colours: the person's own where they've picked any, or changing by
-    /// themselves if that's switched on.
+    /// The colours of the visual that's showing: the person's own where they've picked
+    /// any, or changing by themselves if that's switched on.
     private let palette: BandPalette
 
-    /// - Parameter controls: the person's own changes (`AcceleratorSettings.controls`),
-    ///   so the bars and meters are the same colours as the visual's sections.
-    public init(listener: MusicListener, controls: ControlValues = ControlValues()) {
+    /// - Parameter settings: the person's settings, so the bars and meters are the
+    ///   same colours as the sections of the visual that's showing.
+    public init(listener: MusicListener, settings: AcceleratorSettings = AcceleratorSettings()) {
         self.listener = listener
-        palette = BandPalette(controls)
+        palette = BandPalette(settings.controls, visual: settings.visual)
     }
 
     public var body: some View {

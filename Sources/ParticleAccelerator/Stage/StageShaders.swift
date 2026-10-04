@@ -14,6 +14,18 @@ enum StageShaders {
         static float chance(float n) { return fract(sin(n) * 43758.5453123); }
         static float chance2(float a, float b) { return fract(sin(a * 127.1 + b * 311.7) * 43758.5453123); }
 
+        // The same well-mixed number from 0 to 1 for the same spark and purpose, worked
+        // out in whole numbers. The two above go through a sine, and on the iMac's
+        // graphics card that came out as exactly 0 for about one spark in a thousand:
+        // enough to draw a line of sparks straight up Visualizer 6 (2026-10-04). New
+        // code uses this one.
+        static float sparkChance(uint spark, uint purpose) {
+            uint mixed = spark * 747796405u + purpose * 2891336453u + 1u;
+            mixed = ((mixed >> ((mixed >> 28u) + 4u)) ^ mixed) * 277803737u;
+            mixed = (mixed >> 22u) ^ mixed;
+            return float(mixed) * (1.0 / 4294967296.0);
+        }
+
         // The spectrum's height at a place along it, from 0 (bass) to 1 (highs), read
         // smoothly between the 64 bars.
         static float spectrumAt(constant StageUniforms &stage, float along) {

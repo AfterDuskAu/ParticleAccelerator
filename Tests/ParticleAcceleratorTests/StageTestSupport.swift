@@ -53,6 +53,15 @@ struct Frame {
         return (red / max(count, 1), green / max(count, 1), blue / max(count, 1))
     }
 
+    /// How bright the brightest pixel is, from 0 to 1.
+    var brightestPixel: Double {
+        var most: UInt8 = 0
+        for start in stride(from: 0, to: pixels.count, by: 4) {
+            most = max(most, pixels[start], pixels[start + 1], pixels[start + 2])
+        }
+        return Double(most) / 255
+    }
+
     /// The average brightness of each row, top to bottom.
     var rows: [Double] {
         (0..<height).map { y in
@@ -61,7 +70,16 @@ struct Frame {
     }
 }
 
-/// Draws frames of a visual without a window, and hands back the last one.
+/// A visual's base settings: its plain first ones, which a visual's own tests look at.
+/// (Its standard may be anything the owner has since set.)
+func baseValues(ofVisual visual: Int) -> ControlValues {
+    var values = ControlValues()
+    values.resetToBase(visual: visual)
+    return values
+}
+
+/// Draws frames of a visual without a window, and hands back the last one. The visual
+/// starts at its base settings.
 final class TestStage {
     let renderer: StageRenderer
     private let device: MTLDevice
@@ -78,6 +96,7 @@ final class TestStage {
         renderer = try StageRenderer(
             device: device, visualNumber: visual, tier: tier, screenFormat: .bgra8Unorm)
         try renderer.resize(forViewPixels: CGSize(width: width, height: height))
+        renderer.values = baseValues(ofVisual: visual)
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(
             pixelFormat: .bgra8Unorm, width: width, height: height, mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]

@@ -1,7 +1,8 @@
 import Foundation
 import simd
 
-/// The six bands' colours at any moment.
+/// The six bands' colours in one visual at any moment. Each visual has its own, so that
+/// one can be locked while another is changed (the owner, 2026-10-04).
 ///
 /// They're either fixed (the person's own, or the bands' own), or they change by
 /// themselves: the colours drift slowly from one made-up set to the next and never
@@ -22,22 +23,49 @@ struct BandPalette: Equatable {
     /// How long the drift from one made-up set to the next takes.
     var secondsForAChange: Double
 
-    /// Whether the colours change by themselves: 0 for no, 1 for yes.
-    static let changesControl = VisualControl(
-        visual: 0, key: "coloursChange", name: "Change by themselves", group: "Colours", unit: .share,
-        range: 0...1, usual: 0,
-        help: "The colours drift slowly from one made-up set to the next, and never settle.")
-    static let secondsControl = VisualControl(
-        visual: 0, key: "colourSeconds", name: "A new set every", group: "Colours", unit: .seconds,
-        range: 4...120, usual: 20, spreadsEvenlyByRatio: true,
-        help: "How long the colours take to drift from one set to the next.")
-    /// The controls every visual shares, which belong to none of them.
-    static let controls = [changesControl, secondsControl]
+    // The two controls that say whether and how fast a visual's colours change. Each
+    // visual has its own, saved under its own number, as it has its own colours.
+    static let changesKey = "coloursChange"
+    static let secondsKey = "colourSeconds"
 
-    init(_ values: ControlValues) {
-        own = Band.allCases.map { values.colour(of: $0) }
-        changesByItself = values.value(of: Self.changesControl) >= 0.5
-        secondsForAChange = Double(values.value(of: Self.secondsControl))
+    /// Whether the visual's colours change by themselves: 0 for no, 1 for yes.
+    static func changesControl(ofVisual visual: Int) -> VisualControl {
+        controls(ofVisual: visual)[0]
+    }
+
+    static func secondsControl(ofVisual visual: Int) -> VisualControl {
+        controls(ofVisual: visual)[1]
+    }
+
+    /// Both, for a visual: whether its colours change, then how fast.
+    static func controls(ofVisual visual: Int) -> [VisualControl] {
+        controlsOfBuiltVisuals[visual] ?? makeControls(ofVisual: visual)
+    }
+
+    /// Made once for each visual that's built: the stage asks for them every frame.
+    private static let controlsOfBuiltVisuals: [Int: [VisualControl]] = Dictionary(
+        uniqueKeysWithValues: StageRenderer.visuals.map { ($0.number, makeControls(ofVisual: $0.number)) })
+
+    private static func makeControls(ofVisual visual: Int) -> [VisualControl] {
+        let standard = StageRenderer.standard(ofVisual: visual)
+        return [
+            VisualControl(
+                visual: visual, key: changesKey, name: "Change by themselves", group: "Colours", unit: .share,
+                range: 0...1, base: 0, standard: standard[changesKey],
+                help: "The colours drift slowly from one made-up set to the next, and never settle."),
+            VisualControl(
+                visual: visual, key: secondsKey, name: "A new set every", group: "Colours", unit: .seconds,
+                range: 4...120, base: 20, standard: standard[secondsKey], spreadsEvenlyByRatio: true,
+                help: "How long the colours take to drift from one set to the next."),
+        ]
+    }
+
+    /// A visual's colours, as the person has them.
+    init(_ values: ControlValues, visual: Int) {
+        let controls = Self.controls(ofVisual: visual)
+        own = Band.allCases.map { values.colour(of: $0, in: visual) }
+        changesByItself = values.value(of: controls[0]) >= 0.5
+        secondsForAChange = Double(values.value(of: controls[1]))
     }
 
     /// Each band's colour at a moment, sub first.

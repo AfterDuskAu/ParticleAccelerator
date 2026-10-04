@@ -2,7 +2,7 @@
 
 Visuals that move with the music, for the Mac. Particles, light, ink and 3D shapes are driven live by the real sound of a song file, whatever the Mac is playing, or a microphone. It works on an older Intel iMac and scales up to a Mac Studio on a 4K or 6K screen.
 
-**Status:** early (version 0.1.0). Four visuals are on screen: Visualizer 3 (Particle Wave) in its second version, and base designs of Visualizers 4, 5 and 6 for the owner to shape. It moves to a song file, to whatever the Mac is playing, or to a microphone. A controls panel (View → Controls) changes its peaks, movement, sparks, line and colours while it plays. See [`docs/PLAN.md`](docs/PLAN.md).
+**Status:** early (version 0.1.0). Six visuals are on screen: Visualizer 3 (Particle Wave) in its second version; Visualizers 4 and 5, tuned by the owner; and base designs of Visualizers 6, 7 and 8 for the owner to shape. It moves to a song file, to whatever the Mac is playing, or to a microphone. A controls panel (View → Controls) changes the chosen visual's settings and colours while it plays, and each visual has a standard to go back to and a lock. See [`docs/PLAN.md`](docs/PLAN.md).
 
 ## The visuals
 
@@ -11,9 +11,11 @@ Visuals that move with the music, for the Mac. Particles, light, ink and 3D shap
 | 1 | Ring & Ink | planned |
 | 2 | Iron Maw | planned |
 | 3 | Particle Wave | second version built |
-| 4 | Tendrils | base design built |
-| 5 | Fountain | base design built |
-| 6 | Starburst | base design built |
+| 4 | Tendrils | tuned by the owner; its standard is set |
+| 5 | Fountain | tuned by the owner and locked in |
+| 6 | Starburst | second base design built |
+| 7 | Corona | base design built (Visualizer 4, laid out by band) |
+| 8 | Jets | base design built (Visualizer 5, laid out by band) |
 
 What each one looks like and how it moves: [`docs/VISUALS.md`](docs/VISUALS.md).
 
@@ -31,7 +33,7 @@ Then choose what to listen to:
 - **Whatever the Mac is playing** (Spotify, a browser): Listen → This Mac's Sound. It needs macOS 14.2 or later, and macOS asks for permission the first time.
 - **A microphone:** Listen → Microphone. It uses the input chosen in System Settings → Sound.
 
-In the View menu: Quality (Auto, Low, Medium, High, Ultra), Frame Time (how long each frame takes), and Sound Check (plain bars and meters in place of the visual).
+In the View menu: Visualizer, Quality (Auto, Low, Medium, High, Ultra), Frame Time (how long each frame takes), Sound Check (plain bars and meters under the visual) and Controls (the panel that changes the visual).
 
 To start it muted (for checking the picture without any sound):
 

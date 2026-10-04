@@ -8,23 +8,26 @@ import simd
 
 @Test func theColoursAreTheBandsOwnUntilAPersonPicksOthers() {
     var values = ControlValues()
-    #expect(BandPalette(values).colours(at: 12) == Band.allCases.map(\.colour))
-    values.setColour(SIMD3(0.2, 0.4, 0.6), for: .mids)
-    let colours = BandPalette(values).colours(at: 12)
+    #expect(BandPalette(values, visual: 3).colours(at: 12) == Band.allCases.map(\.colour))
+    values.setColour(SIMD3(0.2, 0.4, 0.6), for: .mids, in: 3)
+    let colours = BandPalette(values, visual: 3).colours(at: 12)
     #expect(colours[Band.mids.rawValue] == SIMD3(0.2, 0.4, 0.6))
     #expect(colours[Band.sub.rawValue] == Band.sub.colour)
     // And they don't move.
-    #expect(BandPalette(values).colours(at: 500) == colours)
+    #expect(BandPalette(values, visual: 3).colours(at: 500) == colours)
 }
 
 // MARK: Colours that change by themselves
 
-/// The palette with "change by themselves" switched on.
+private let changes = BandPalette.changesControl(ofVisual: 3)
+private let changeSeconds = BandPalette.secondsControl(ofVisual: 3)
+
+/// Visualizer 3's palette with "change by themselves" switched on.
 private func changing(every seconds: Float = 20) -> BandPalette {
     var values = ControlValues()
-    values.set(1, for: BandPalette.changesControl)
-    values.set(seconds, for: BandPalette.secondsControl)
-    return BandPalette(values)
+    values.set(1, for: changes)
+    values.set(seconds, for: changeSeconds)
+    return BandPalette(values, visual: 3)
 }
 
 @Test func switchedOnTheColoursDriftAndNeverSettle() {
@@ -75,21 +78,21 @@ private func changing(every seconds: Float = 20) -> BandPalette {
 
 @Test func aPersonsOwnColoursWaitWhileTheColoursChange() {
     var values = ControlValues()
-    values.setColour(SIMD3(0.2, 0.4, 0.6), for: .mids)
-    values.set(1, for: BandPalette.changesControl)
-    #expect(BandPalette(values).colours(at: 77)[Band.mids.rawValue] != SIMD3(0.2, 0.4, 0.6))
+    values.setColour(SIMD3(0.2, 0.4, 0.6), for: .mids, in: 3)
+    values.set(1, for: changes)
+    #expect(BandPalette(values, visual: 3).colours(at: 77)[Band.mids.rawValue] != SIMD3(0.2, 0.4, 0.6))
     // Switched off again, they're back.
-    values.reset(BandPalette.changesControl)
-    #expect(BandPalette(values).colours(at: 77)[Band.mids.rawValue] == SIMD3(0.2, 0.4, 0.6))
+    values.set(0, for: changes)
+    #expect(BandPalette(values, visual: 3).colours(at: 77)[Band.mids.rawValue] == SIMD3(0.2, 0.4, 0.6))
 }
 
 @Test func theShadersAreGivenTheColoursOfTheMoment() {
     var values = ControlValues()
-    values.set(1, for: BandPalette.changesControl)
+    values.set(1, for: changes)
     var early = StageUniforms()
-    early.setBandLight(from: values, at: 100)
+    early.setBandLight(from: values, visual: 3, at: 100)
     var late = StageUniforms()
-    late.setBandLight(from: values, at: 160)
+    late.setBandLight(from: values, visual: 3, at: 160)
     #expect(early.bandLight != late.bandLight)
     // As light, the brightest part of each is still full.
     for band in 0..<6 {
@@ -99,12 +102,12 @@ private func changing(every seconds: Float = 20) -> BandPalette {
 
 @Test func resetAllSwitchesTheChangingOffToo() {
     var values = ControlValues()
-    values.set(1, for: BandPalette.changesControl)
-    values.set(8, for: BandPalette.secondsControl)
-    #expect(values.hasChanges(among: ParticleWave.controls))
-    values.reset(ParticleWave.controls)
+    values.set(1, for: changes)
+    values.set(8, for: changeSeconds)
+    #expect(values.differsFromStandard(visual: 3) && values.differsFromBase(visual: 3))
+    values.resetToBase(visual: 3)
     #expect(values.isEmpty)
-    #expect(!BandPalette(values).changesByItself)
+    #expect(!BandPalette(values, visual: 3).changesByItself)
 }
 
 @Test func aColourFromItsPlaceOnTheWheel() {

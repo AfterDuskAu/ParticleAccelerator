@@ -30,5 +30,7 @@ public enum Visuals {
         VisualInfo(number: 4, name: "Tendrils", isBuilt: false),
         VisualInfo(number: 5, name: "Fountain", isBuilt: false),
         VisualInfo(number: 6, name: "Starburst", isBuilt: false),
+        VisualInfo(number: 7, name: "Corona", isBuilt: false),
+        VisualInfo(number: 8, name: "Jets", isBuilt: false),
     ]
 }

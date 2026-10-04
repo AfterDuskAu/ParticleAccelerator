@@ -69,9 +69,25 @@ High holds 60 fps on the iMac for all four (a frame allows 16.7 ms). Ultra needs
 
 Three of the four would hold 60 fps at 4K; Visualizer 3's busiest frames wouldn't. So High stays at 2560×1440, which the 5K screen doubles exactly in full screen. In a window the picture is already drawn at the window's own pixels. A sharper setting for the visuals that can afford it belongs with Auto quality.
 
+**Later the same day,** after the owner had tuned Visualizers 4 and 5, Visualizer 6 was built a second time, and Visualizers 7 and 8 were added. Measured the same way, each as it's first shown (its standard), with the Mac busier than it was for the table above (other projects were building, and Visualizer 3 measured 5.3 ms where it had been 4.5):
+
+| Tier | 3 Particle Wave | 4 Tendrils | 5 Fountain | 6 Starburst | 7 Corona | 8 Jets |
+|---|---|---|---|---|---|---|
+| Low | 0.8 ms | 0.7 ms | 0.8 ms | 1.1 ms | 0.7 ms | 0.6 ms |
+| Medium | 2.0 ms | 2.0 ms | 2.9 ms | 3.7 ms | 1.1 ms | 1.6 ms |
+| High | 5.3 ms (slowest 9.1) | 5.7 ms (slowest 8.2) | 8.0 ms (slowest 9.9) | 10.8 ms (slowest 12.4) | 2.1 ms (slowest 4.8) | 3.7 ms (slowest 6.5) |
+| Ultra | 32.6 ms | 30.9 ms | 45.2 ms | 50.9 ms | 7.0 ms | 19.7 ms |
+
+- **High holds 60 fps for all six.**
+- **With the owner's own saved settings** for each (the sliders as they'd left them), High: 4.4, 6.7, 8.0, 10.0, 2.3 and 4.6 ms, and none slower than 11.9 ms.
+- **Visualizer 5 costs more at the owner's standard** than at its base (8.0 ms against 4.7): the spray is wider and its sparks last twice as long, so more of them are on screen.
+- **Visualizer 6 is the dearest now** (10.8 ms; its first design was 4.5). Every spark is in the air in three dimensions, and those away from the distance the camera is focused on are drawn as discs many pixels across. There's room at High, but less than the others have.
+- **Visualizer 7 is the cheapest** (2.1 ms): the unlit part of each strand isn't drawn at all.
+- **In the app,** High, with the made-up test song: 60 fps for each, and 2.1 ms (Visualizer 7), 3.4 ms (8), 7.1 ms (5) and 9.5 ms (6, with the owner's settings; slowest 14.4) on the graphics card. Visualizer 6 with long streaks is the one nearest the 16.7 ms a frame allows.
+
 **How a spark is drawn** was measured two ways (Visualizer 3, High): as one square of pixels with its shape worked out inside, 4.5 ms; as a four-cornered patch lying along its streak, which wastes no pixels, 7.4 ms. Drawing four corners for every spark costs more than the pixels saved, so it's one square, and streaks are kept short (at most 2% of the picture's height).
 
-**Flashing** (the biggest swing in the whole picture's brightness within a third of a second, where 10% or more counts as a flash): Visualizer 3, 8%; Tendrils, 3%; Fountain, 3%; Starburst, 4%.
+**Flashing** (the biggest swing in the whole picture's brightness within a third of a second, where 10% or more counts as a flash): Visualizer 3, 8%; Tendrils, 3%; Fountain, 3%; Starburst, 4%. Measured again later that day: Visualizer 3, 5%; Tendrils at the owner's standard, 1%; Fountain at the owner's standard, 5%; Starburst's second design, 5% (6% with the owner's settings); Corona, 7% at its base and 5% at its standard; Jets, 6% and 4%.
 
 ### Hearing the music
 
