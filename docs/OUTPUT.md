@@ -104,6 +104,12 @@ Three of the four would hold 60 fps at 4K; Visualizer 3's busiest frames wouldn'
 - **Flashing wasn't measured again** for the new standards.
 - These aren't the table above's numbers over again: a made-up reading keeps every part of the picture busy at once, which a song doesn't. The comparison is between the columns here.
 
+**2026-10-05, Visualizer 8's last standard** (a darker picture, less glow, only the strongest pitches). Measured the same way, but the owner was using Music Organizer at the time and the graphics card was shared: Visualizer 3 at High, the yardstick, read 12.2 ms in one pass and 5.7 in the next. So only the broad result is kept.
+
+- **At High it's still over what a frame allows:** 16.7 and 27.2 ms in the two passes (slowest 59.5), against 20.1 and 35.7 for the standard before it in the same passes.
+- **At Medium it's under:** 7.9 and 4.1 ms (slowest 13.7).
+- Nothing here says the new standard costs more or less than the one before. What changed is how the picture is finished and which pitches show, not how many sparks there are. It wants measuring again with the Mac quiet.
+
 **How a spark is drawn** was measured two ways (Visualizer 3, High): as one square of pixels with its shape worked out inside, 4.5 ms; as a four-cornered patch lying along its streak, which wastes no pixels, 7.4 ms. Drawing four corners for every spark costs more than the pixels saved, so it's one square, and streaks are kept short (at most 2% of the picture's height).
 
 **Flashing** (the biggest swing in the whole picture's brightness within a third of a second, where 10% or more counts as a flash): Visualizer 3, 8%; Tendrils, 3%; Fountain, 3%; Starburst, 4%. Measured again later that day: Visualizer 3, 5%; Tendrils at the owner's standard, 1%; Fountain at the owner's standard, 5%; Starburst's second design, 5% (6% with the owner's settings); Corona, 7% at its base and 5% at its standard; Jets, 6% and 4%.

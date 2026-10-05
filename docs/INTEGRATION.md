@@ -107,3 +107,4 @@ The API is still a plan until version 1.0.0, and these may change before then.
   - `AcceleratorControls` has a Lock button for the chosen visual, and Set Standard, Reset to Standard and Reset All. A host that shows the panel gets them with it.
   - A visual with no saved settings now shows its standard, which for Visualizers 4, 5, 7 and 8 isn't its plain first design. That's a change in what a host sees, not in the API.
 - **0.1.0, 2026-10-04, afternoon: no change to the API.** Visualizers 5, 7 and 8 have new standards, the owner's. A host with no saved settings for them shows the new ones.
+- **0.1.0, 2026-10-05: no change to the API.** Visualizer 8 has the standard the owner set last, and starts locked. The lock is for the controls panel; a host that shows no panel sees only the new picture.

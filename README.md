@@ -15,7 +15,7 @@ Visuals that move with the music, for the Mac. Particles, light, ink and 3D shap
 | 5 | Fountain | tuned by the owner and locked in |
 | 6 | Starburst | second base design built |
 | 7 | Corona | tuned by the owner; its standard is set (Visualizer 4, laid out by band) |
-| 8 | Jets | tuned by the owner; its standard is set (Visualizer 5, laid out by band) |
+| 8 | Jets | tuned by the owner and locked in (Visualizer 5, laid out by band) |
 
 What each one looks like and how it moves: [`docs/VISUALS.md`](docs/VISUALS.md).
 

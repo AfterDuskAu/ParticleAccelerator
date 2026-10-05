@@ -50,7 +50,8 @@ private let fountainHeight = Fountain.Control.height
 @Test func theOwnersStandardsAreAsTheySetThem() {
     // Visualizer 4's is from the owner's screenshot of the morning of 2026-10-04.
     // Visualizers 5, 7 and 8's are what the panel showed for the standards the owner
-    // set that afternoon (the next test has what their app had saved).
+    // set that afternoon, and Visualizer 8's again later that day (the tests after
+    // this have what their app had saved).
     func shown(_ visual: Visual.Type, _ key: String) -> String? {
         let controls = visual.controls + BandPalette.controls(ofVisual: visual.number)
         return controls.first { $0.key == key }.map { $0.text(for: ControlValues().value(of: $0)) }
@@ -80,10 +81,10 @@ private let fountainHeight = Fountain.Control.height
     let jets: [String: String] = [
         "jetsForEachBand": "8", "height": "1.17×", "quickness": "0.51×", "rowWidth": "0.60×",
         "spread": "3.05×", "fan": "4.21×", "amount": "3.74×", "kickBurst": "1.22×", "life": "2.50×",
-        "quietPitches": "6.0 dB", "heldSound": "35%", "responseWidth": "1.5 bars", "fall": "0.12 s",
+        "quietPitches": "2.7 dB", "heldSound": "35%", "responseWidth": "1.5 bars", "fall": "0.12 s",
         "sparkSize": "0.61×", "sparkBrightness": "1.43×", "twinkle": "2.00×", "whiteHeat": "5%",
         "streaks": "4.00×", "floorGlow": "0.00×", "cameraMovement": "0.24×", "beatPunch": "0.17×",
-        "glow": "0.24×", "brightness": "0.44×", "darkCorners": "64%",
+        "glow": "0.07×", "brightness": "0.37×", "darkCorners": "100%",
     ]
     for (key, text) in jets { #expect(shown(Jets.self, key) == text, "8.\(key)") }
     #expect(Set(jets.keys) == Set(Jets.controls.map(\.key)))
@@ -139,8 +140,13 @@ private let fountainHeight = Fountain.Control.height
     // What the owner's app had saved on the afternoon of 2026-10-04, when they asked for
     // Visualizers 5, 7 and 8 as they'd set them: a standard of their own for each
     // ("Set Standard"), and Visualizer 5 unlocked to be tuned again. Those are the
-    // library's standards now. So opened now, every control of the three reads as it
-    // did for the owner, and a person with no saved settings sees the same.
+    // library's standards now. So opened now, every control of the three reads as the
+    // library has it, and a person with no saved settings sees the same.
+    //
+    // Later that day the owner set Visualizer 8 again (the next test). The four
+    // controls they changed then weren't saved here, being at the library's standard
+    // of the time, so here they follow the library's newer one, as anything not saved
+    // does.
     let saved = """
         {"limitsFlashing":true,"controls":{"numbers":{"6.speed":2.6521173,"4.strandBrightness":0.752131,\
         "6.heads":0,"4.holeSize":1.7655804,"4.colourSeconds":4.677037,"6.spread":0.35046774,\
@@ -191,6 +197,36 @@ private let fountainHeight = Fountain.Control.height
     // The owner had unlocked Visualizer 5 to tune it. For anyone else it still starts
     // locked.
     #expect(!values.isLocked(visual: 5) && nothingSaved.isLocked(visual: 5))
+    let again = try JSONDecoder().decode(AcceleratorSettings.self, from: JSONEncoder().encode(settings))
+    #expect(again == settings)
+}
+
+@Test func theOwnersLaterSavedSettingsAreVisualizer8sStandard() throws {
+    // The part about Visualizer 8 of what the owner's app had saved later on
+    // 2026-10-04, when they'd set its standard again and locked it ("visualizer 8
+    // standard/lock"): only the strongest pitches showing, a darker picture with
+    // hardly any glow, and corners as dark as they go. That's the library's standard
+    // now, and Visualizer 8 starts locked.
+    let saved = """
+        {"controls":{"standardNumbers":{"8.amount":3.7413692,"8.beatPunch":0.17024097,\
+        "8.brightness":0.36753595,"8.cameraMovement":0.2352995,"8.darkCorners":1,"8.fan":4.212895,\
+        "8.floorGlow":0,"8.glow":0.06512586,"8.height":1.1660613,"8.jetsForEachBand":8,\
+        "8.kickBurst":1.2167834,"8.life":2.5,"8.quickness":0.5068112,"8.quietPitches":2.675643,\
+        "8.rowWidth":0.60253716,"8.sparkBrightness":1.4327991,"8.sparkSize":0.61326164,"8.spread":3.04733,\
+        "8.streaks":4,"8.twinkle":2,"8.whiteHeat":0.047033582},"locks":{"8":true,"5":false}},\
+        "quality":"medium","visual":8}
+        """
+    let settings = try JSONDecoder().decode(AcceleratorSettings.self, from: Data(saved.utf8))
+    let values = settings.controls
+    let nothingSaved = ControlValues()
+    #expect(!values.differsFromStandard(visual: 8))
+    for control in Jets.controls + BandPalette.controls(ofVisual: 8) {
+        #expect(control.readsTheSame(values.standard(of: control), control.standard), "\(control.id)")
+        #expect(control.readsTheSame(values.value(of: control), nothingSaved.value(of: control)), "\(control.id)")
+    }
+    #expect(values.isLocked(visual: 8) && nothingSaved.isLocked(visual: 8))
+    #expect(nothingSaved.value(of: Jets.Control.response.quietPitches) == 2.68)
+    #expect(nothingSaved.value(of: Jets.Control.common.darkCorners) == 1)
     let again = try JSONDecoder().decode(AcceleratorSettings.self, from: JSONEncoder().encode(settings))
     #expect(again == settings)
 }
@@ -298,11 +334,16 @@ private let fountainHeight = Fountain.Control.height
 
 // MARK: The lock
 
-@Test func visualizer5StartsLockedAndCanBeUnlocked() {
+@Test func visualizers5And8StartLockedAndCanBeUnlocked() {
     var values = ControlValues()
-    #expect(Fountain.startsLocked)
-    #expect(values.isLocked(visual: 5))
-    for visual in [3, 4, 6, 7, 8] { #expect(!values.isLocked(visual: visual), "Visualizer \(visual)") }
+    #expect(Fountain.startsLocked && Jets.startsLocked)
+    #expect(values.isLocked(visual: 5) && values.isLocked(visual: 8))
+    for visual in [3, 4, 6, 7] { #expect(!values.isLocked(visual: visual), "Visualizer \(visual)") }
+
+    values.setLocked(false, visual: 8)
+    #expect(!values.isLocked(visual: 8) && values.isLocked(visual: 5) && !values.isEmpty)
+    values.setLocked(true, visual: 8)
+    #expect(values.isLocked(visual: 8) && values.isEmpty)
 
     values.setLocked(false, visual: 5)
     #expect(!values.isLocked(visual: 5) && !values.isEmpty)
@@ -328,6 +369,6 @@ private let fountainHeight = Fountain.Control.height
     #expect(values.value(of: Corona.Control.speed) != values.value(of: Tendrils.Control.speed))
     #expect(values.value(of: Jets.Control.amount) != values.value(of: Fountain.Control.amount))
     #expect(!BandPalette(values, visual: 7).changesByItself && BandPalette(values, visual: 8).changesByItself)
-    // Neither is locked: they're still the owner's to shape.
-    #expect(!values.isLocked(visual: 7) && !values.isLocked(visual: 8))
+    // Visualizer 8 is locked in. Visualizer 7 isn't: it's still the owner's to shape.
+    #expect(!values.isLocked(visual: 7) && values.isLocked(visual: 8))
 }

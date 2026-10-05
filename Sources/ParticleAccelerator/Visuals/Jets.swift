@@ -263,21 +263,26 @@ final class Jets: Visual {
             Control.common.glow, Control.common.brightness, Control.common.darkCorners,
         ]
 
-    /// The owner's standard (2026-10-04). It began as their Visualizer 5's of that
-    /// morning, and that afternoon they tuned it for itself: eight jets for each band,
+    /// The owner's standard, locked in (2026-10-04). It began as their Visualizer 5's of
+    /// that morning. That afternoon they tuned it for itself: eight jets for each band,
     /// in a narrow row fanned wide; many small, twinkling sparks that rise and fall
     /// slowly, last long and leave long streaks; no glow on the floor; a camera that
-    /// hardly moves; a darker picture with less glow; and colours that change by
-    /// themselves. Anything not listed is at its base.
+    /// hardly moves; and colours that change by themselves. Later the same day they
+    /// set it again and locked it: only the strongest pitches show, in a darker picture
+    /// with hardly any glow and corners as dark as they go. Anything not listed is at
+    /// its base.
     static let standard: [String: Float] = [
         "jetsForEachBand": 8, "height": 1.17, "quickness": 0.51, "rowWidth": 0.60, "spread": 3.05,
         "fan": 4.21, "amount": 3.74, "kickBurst": 1.22, "life": 2.5,
+        "quietPitches": 2.68,
         "sparkSize": 0.61, "sparkBrightness": 1.43, "twinkle": 2, "whiteHeat": 0.047, "streaks": 4,
         "floorGlow": 0,
         "cameraMovement": 0.24, "beatPunch": 0.17,
-        "glow": 0.24, "brightness": 0.44, "darkCorners": 0.64,
+        "glow": 0.0651, "brightness": 0.37, "darkCorners": 1,
         BandPalette.changesKey: 1, BandPalette.secondsKey: 4.68,
     ]
+    /// The owner has settled it. Its panel starts locked, and can be unlocked.
+    static let startsLocked = true
 
     // MARK: The sparks
 

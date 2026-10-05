@@ -13,7 +13,7 @@ The pictures are references only. Each visual is drawn by code in the same style
 | 5 | Fountain | very close | ★ | base design built 2026-10-04; the owner tuned it and locked it in the same day, then tuned it again that afternoon and set a new standard |
 | 6 | Starburst | a firework from the centre, at the owner's direction | ★★★ | second base design built 2026-10-04, after the owner's notes on the first; for the owner to tune |
 | 7 | Corona | ours: Visualizer 4 laid out by band | ★★★★ | base design built 2026-10-04, at the owner's request; the owner tuned it and set its standard the same day |
-| 8 | Jets | ours: Visualizer 5 laid out by band | ★★ | base design built 2026-10-04, at the owner's request; the owner tuned it and set its standard the same day |
+| 8 | Jets | ours: Visualizer 5 laid out by band | ★★ | base design built 2026-10-04, at the owner's request; the owner tuned it, set its standard and locked it in the same day |
 
 **A base design** is a first version with every setting on a slider (View → Controls), built so the owner can shape it themselves. It isn't marked built until they're happy with it.
 
@@ -22,7 +22,7 @@ The pictures are references only. Each visual is drawn by code in the same style
 - **Its base:** the plain first setting the visual was designed with. **Reset All** goes back to it.
 - **Its standard:** what the visual shows until someone changes it. **Reset to Standard** goes back to it, and **Set Standard** makes the settings as they are now the standard.
 - A visual whose standard the owner has settled has it written into the library (`Tendrils.standard`, `Fountain.standard`, `Corona.standard`, `Jets.standard`), so it looks the same in any app. A standard set with the button is kept in that person's settings.
-- **Lock** keeps a visual as it is: nothing in its panel can be moved until it's unlocked. Visualizer 5 starts locked.
+- **Lock** keeps a visual as it is: nothing in its panel can be moved until it's unlocked. Visualizers 5 and 8 start locked.
 - Each visual has its own colours, and they're part of its standard.
 
 **Visualizers 7 and 8 have no reference picture.** They're copies of 4 and 5 that the owner asked for, laid out so that every part of the picture belongs to particular bars of the spectrum. Their cards say what they are in place of a picture.
@@ -162,6 +162,7 @@ The pictures are references only. Each visual is drawn by code in the same style
   - **The sparks rise and fall quickly:** a full jet's are at the top in under half a second. So a jet is up within a beat and down before the next. Quickness sets this.
   - **A fresh hit stands taller than a sound that holds,** as in Visualizer 7.
   - On each beat the kick's jets jump higher. The highs make the sparks twinkle.
-- **The owner's standard (2026-10-04):** eight jets for each band, in a narrow row (row width 0.60×) fanned wide (fan 4.21×, spread 3.05×). Many small, twinkling sparks (amount 3.74×, size 0.61×, twinkle 2×) that rise and fall slowly (quickness 0.51×), last as long as they can (life 2.5×) and leave long streaks (4×). No glow on the floor. A camera that hardly moves (0.24×) or jumps (0.17×), a darker picture with less glow, and colours that change by themselves, a new set every 4.68 s.
+- **The owner's standard (2026-10-04), locked in:** eight jets for each band, in a narrow row (row width 0.60×) fanned wide (fan 4.21×, spread 3.05×). Many small, twinkling sparks (amount 3.74×, size 0.61×, twinkle 2×) that rise and fall slowly (quickness 0.51×), last as long as they can (life 2.5×) and leave long streaks (4×). Only the strongest pitches show (quieter pitches 2.7 dB). No glow on the floor. A camera that hardly moves (0.24×) or jumps (0.17×). A dark picture (brightness 0.37×) with hardly any glow (0.07×) and corners as dark as they go (100%), and colours that change by themselves, a new set every 4.68 s. Its panel starts locked.
+  - The last four (quieter pitches, brightness, glow, dark corners) are from the owner's second go at it, later the same day, when they also locked it. Before that they were 6 dB, 0.44×, 0.24× and 64%.
   - It began as the owner's Visualizer 5 of that morning in everything the two share, with the jets at their base: three for each band, rising and falling quickly.
 - **Its controls:** Jets (jets for each band, height, quickness, row width, spread, fan, amount, kick burst, life), Response (quieter pitches, held sound, width, fall), Sparks, Floor glow, Movement, Picture, Colours.

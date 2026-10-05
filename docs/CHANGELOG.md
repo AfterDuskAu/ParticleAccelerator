@@ -470,3 +470,16 @@ What was added:
 - **`PlayerFeed` builds with either SDK** now, without naming a version: what the function hands back is left for the compiler to work out, and the tap is taken hold of in the way that calls for.
 - **Checked:** `swift build` and `swift test` on the iMac (Xcode 26.3, 191 tests). The older form was tried with a stand-in function of Xcode 16's shape: it handed back a tap held once, as it should be. The real check is CI's Intel Mac.
 - **Not known yet:** whether anything else differs with Xcode 16. The library's build stopped at this one error; the tests and the app had never been built there.
+
+### Visualizer 8's standard, set again and locked in
+
+2026-10-05. Late on 2026-10-04 the owner changed four of Visualizer 8's settings, pressed Set Standard and locked it, and the next morning asked for Music Organizer to have it ("visualizer 8 standard/lock"). As before, that had been kept only in the app's settings.
+
+- **Four values of `Jets.standard` are the owner's newer ones:** quieter pitches 2.7 dB (it was 6), glow 0.07× (0.24×), brightness 0.37× (0.44×), dark corners 100% (64%). So only the strongest pitches show, in a darker picture with hardly any glow. The rest is as it was written in on 2026-10-04.
+- **Visualizer 8 starts locked** (`Jets.startsLocked`), as Visualizer 5 does. From now on it isn't retuned or reworked without the owner's say: a new idea for it goes into a copy with a number of its own.
+- **Glow is written as 0.0651,** a place more than the others: 0.065 reads as 0.06× in the panel, and the owner's 0.0651 reads as 0.07×.
+- **Tests** (`StandardsTests`): the part about Visualizer 8 of what the owner's app had saved opens with every control reading the same as the library's standard, and locked; a person with nothing saved sees the same. Visualizers 5 and 8 start locked and can be unlocked; 7 doesn't.
+- **Measured** (`OUTPUT.md`, "2026-10-05"), roughly, with the graphics card shared: still over a frame's 16.7 ms at High, and under at Medium (4 to 8 ms). Nothing says it costs more or less than the standard before it.
+- No public API changed. Music Organizer moves its pin to this commit.
+
+**Not done:** a clean measurement (the owner was using the Mac), flashing measured again, and a look in the running app by anyone but the owner, who made it there.
